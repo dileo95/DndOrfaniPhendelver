@@ -1,0 +1,89 @@
+<div class="header">
+  <div class="header-left"></div>
+  <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 40px; background: transparent">
+    <h1 style="line-height: 40px; text-align: center; margin: 0; font-size: 30px;">
+      ⏳ Timeline degli Eventi
+    </h1>
+  </div>
+  <div class="header-right"></div>
+  <button class="back" style="position: absolute;" (click)="goBack()">
+    <img src="/assets/img/back-arrow.png" style="width: 20px; margin-top: 10px;" alt="Back" />
+  </button>
+</div>
+
+<div class="timeline-container" style="padding-top: 60px;">
+  <header class="timeline-header">
+    <h1>⏳ Timeline degli Eventi</h1>
+    <p class="subtitle">Storia cronologica della campagna</p>
+  </header>
+
+  <div class="timeline-controls">
+    <button 
+      [class.active]="activeFilter() === 'all'" 
+      (click)="filterBy('all')"
+      class="filter-btn">
+      Tutti gli Eventi
+    </button>
+    <button 
+      [class.active]="activeFilter() === 'previous'" 
+      (click)="filterBy('previous')"
+      class="filter-btn previous">
+      📜 Antefatti (Previous)
+    </button>
+    <button 
+      [class.active]="activeFilter() === 'story'" 
+      (click)="filterBy('story')"
+      class="filter-btn story">
+      ⚔️ Storia (Story)
+    </button>
+  </div>
+
+  <div class="timeline-wrapper">
+    <svg #timelineSvg class="timeline-svg"></svg>
+  </div>
+
+  <div class="timeline-legend">
+    <div class="legend-item">
+      <span class="marker previous"></span> Antefatti
+    </div>
+    <div class="legend-item">
+      <span class="marker story"></span> Storia Attuale
+    </div>
+  </div>
+
+  @if (selectedEvent(); as event) {
+    <div class="event-details-overlay" (click)="closeDetails()">
+      <div class="event-details" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeDetails()">✕</button>
+        <div class="event-date">{{ event.date }}</div>
+        <h2>{{ event.title }}</h2>
+        <p class="event-description">{{ event.description }}</p>
+        
+        @if (event.entities && event.entities.length > 0) {
+          <div class="event-entities">
+            <h3>Personaggi Coinvolti:</h3>
+            <div class="entity-tags">
+              @for (entity of event.entities; track entity) {
+                <span class="entity-tag">{{ entity }}</span>
+              }
+            </div>
+          </div>
+        }
+        
+        @if (event.location) {
+          <div class="event-location">
+            <strong>📍 Luogo:</strong> {{ event.location }}
+          </div>
+        }
+        
+        <div class="event-chapter">
+          <strong>Capitolo:</strong> {{ event.chapter === 'previous' ? 'Antefatti' : 'Storia' }}
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="timeline-instructions">
+    <p>💡 Click su un evento per vedere tutti i dettagli</p>
+  </div>
+</div>

@@ -1,0 +1,63 @@
+/* Character Card styles */
+:host {
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  height: 100vh;
+}
+
+// Gli stili per header sono definiti in style.css globale
+
+.back {
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  perspective: 1000px;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
+.card {
+  position: relative;
+  width: 90%;
+  max-width: 400px;
+  aspect-ratio: 2.5 / 3.5;
+  border-radius: 20px;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  display: block;
+}
+
+.foil-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  background: radial-gradient(
+    circle at center,
+    rgba(228, 202, 55, 0.3),
+    rgba(167, 241, 99, 0) 70%
+  );
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}

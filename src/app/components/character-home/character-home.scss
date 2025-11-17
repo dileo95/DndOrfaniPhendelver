@@ -1,0 +1,47 @@
+/* Character Home styles */
+// Gli stili per header sono definiti in style.css globale
+
+.back {
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.button-home {
+  width: 100%;
+  margin-bottom: 16px;
+  font-size: 30px;
+  padding: 24px;
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+  text-align: start;
+  font-family: myFirstFont;
+}
+
+.button-home.asriel {
+  background: #211e1e;
+  color: #cda11e;
+  border: 2px solid black;
+}
+
+.button-home.auryn {
+  background: darkred;
+  color: greenyellow;
+  border: 2px solid black;
+}
+
+.button-home.ravel {
+  background: royalblue;
+  color: darkred;
+  border: 2px solid black;
+}
+
+.button-home.ruben {
+  background: silver;
+  color: black;
+  border: 2px solid black;
+}

@@ -1,0 +1,252 @@
+@if (sheet(); as s) {
+<div class="header">
+  <div class="header-left"></div>
+  <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 40px; background: transparent">
+    <h1 style="line-height: 40px; text-align: center; margin: 0; font-size: 30px;">
+      📋 {{ s.character | titlecase }}
+    </h1>
+  </div>
+  <div class="header-right"></div>
+  <button class="back" style="position: absolute;" (click)="goBack()">
+    <img src="/assets/img/back-arrow.png" style="width: 20px; margin-top: 10px;" alt="Back" />
+  </button>
+</div>
+
+  <div class="sheet-container" style="padding-top: 60px;">
+    <header class="sheet-header">
+      <div class="character-title">
+        <h1>{{ s.character | titlecase }}</h1>
+        <p class="char-info">{{ s.race }} {{ s.class }} - Level {{ s.level }}</p>
+      </div>
+      
+      <div class="header-actions">
+        @if (!editMode()) {
+          <button class="btn-edit" (click)="toggleEditMode()">✏️ Modifica</button>
+        } @else {
+          <button class="btn-save" (click)="saveSheet()">💾 Salva</button>
+          <button class="btn-cancel" (click)="toggleEditMode()">❌ Annulla</button>
+        }
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="sheet-grid">
+      <!-- Left Column: Stats & Skills -->
+      <div class="left-column">
+        <!-- Ability Scores -->
+        <section class="ability-scores">
+          <div class="ability-box">
+            <label>FOR</label>
+            <input type="number" [(ngModel)]="s.strength" [disabled]="!editMode()" class="ability-input">
+            <span class="modifier">{{ formatModifier(strModifier()) }}</span>
+          </div>
+          <div class="ability-box">
+            <label>DES</label>
+            <input type="number" [(ngModel)]="s.dexterity" [disabled]="!editMode()" class="ability-input">
+            <span class="modifier">{{ formatModifier(dexModifier()) }}</span>
+          </div>
+          <div class="ability-box">
+            <label>COS</label>
+            <input type="number" [(ngModel)]="s.constitution" [disabled]="!editMode()" class="ability-input">
+            <span class="modifier">{{ formatModifier(conModifier()) }}</span>
+          </div>
+          <div class="ability-box">
+            <label>INT</label>
+            <input type="number" [(ngModel)]="s.intelligence" [disabled]="!editMode()" class="ability-input">
+            <span class="modifier">{{ formatModifier(intModifier()) }}</span>
+          </div>
+          <div class="ability-box">
+            <label>SAG</label>
+            <input type="number" [(ngModel)]="s.wisdom" [disabled]="!editMode()" class="ability-input">
+            <span class="modifier">{{ formatModifier(wisModifier()) }}</span>
+          </div>
+          <div class="ability-box">
+            <label>CAR</label>
+            <input type="number" [(ngModel)]="s.charisma" [disabled]="!editMode()" class="ability-input">
+            <span class="modifier">{{ formatModifier(chaModifier()) }}</span>
+          </div>
+        </section>
+
+        <!-- Combat Stats -->
+        <section class="combat-stats">
+          <div class="stat-row">
+            <label>AC</label>
+            <input type="number" [(ngModel)]="s.armorClass" [disabled]="!editMode()" class="stat-input">
+          </div>
+          <div class="stat-row">
+            <label>Initiative</label>
+            <input type="number" [(ngModel)]="s.initiative" [disabled]="!editMode()" class="stat-input">
+          </div>
+          <div class="stat-row">
+            <label>Speed</label>
+            <input type="number" [(ngModel)]="s.speed" [disabled]="!editMode()" class="stat-input">
+          </div>
+          <div class="stat-row">
+            <label>Prof Bonus</label>
+            <input type="number" [(ngModel)]="s.proficiencyBonus" [disabled]="!editMode()" class="stat-input">
+          </div>
+        </section>
+
+        <!-- HP -->
+        <section class="hp-section">
+          <h3>Hit Points</h3>
+          <div class="hp-display">
+            <div class="hp-current">
+              <label>Current</label>
+              <span class="hp-value">{{ s.currentHP }}</span>
+            </div>
+            <span class="hp-separator">/</span>
+            <div class="hp-max">
+              <label>Max</label>
+              <span class="hp-value">{{ s.maxHP }}</span>
+            </div>
+          </div>
+          
+          @if (s.temporaryHP > 0) {
+            <div class="temp-hp">
+              Temp HP: <span>{{ s.temporaryHP }}</span>
+            </div>
+          }
+
+          @if (!editMode()) {
+            <div class="hp-actions">
+              <button (click)="restoreHP(1)" class="hp-btn">+1</button>
+              <button (click)="restoreHP(5)" class="hp-btn">+5</button>
+              <button (click)="takeDamage(1)" class="hp-btn damage">-1</button>
+              <button (click)="takeDamage(5)" class="hp-btn damage">-5</button>
+            </div>
+            <button (click)="longRest()" class="btn-rest">🌙 Long Rest</button>
+          } @else {
+            <input type="number" [(ngModel)]="s.maxHP" class="hp-edit">
+          }
+        </section>
+
+        <!-- Skills -->
+        <section class="skills-section">
+          <h3>Skills</h3>
+          @for (skill of allSkills; track skill.name) {
+            <div class="skill-row" [class.proficient]="s.skills[skill.name] > 0" (click)="toggleSkillProficiency(skill.name)">
+              <span class="skill-prof">
+                @if (s.skills[skill.name] === 2) { ⭐ }
+                @else if (s.skills[skill.name] === 1) { ✓ }
+                @else { ○ }
+              </span>
+              <span class="skill-name">{{ skill.name }}</span>
+              <span class="skill-bonus">{{ formatModifier(getSkillBonus(skill.name)) }}</span>
+            </div>
+          }
+        </section>
+      </div>
+
+      <!-- Right Column: Details -->
+      <div class="right-column">
+        <!-- Basic Info -->
+        @if (editMode()) {
+          <section class="basic-info">
+            <div class="info-row">
+              <label>Race</label>
+              <input type="text" [(ngModel)]="s.race" class="info-input">
+            </div>
+            <div class="info-row">
+              <label>Class</label>
+              <input type="text" [(ngModel)]="s.class" class="info-input">
+            </div>
+            <div class="info-row">
+              <label>Level</label>
+              <input type="number" [(ngModel)]="s.level" class="info-input">
+            </div>
+            <div class="info-row">
+              <label>Background</label>
+              <input type="text" [(ngModel)]="s.background" class="info-input">
+            </div>
+          </section>
+        }
+
+        <!-- Weapons -->
+        <section class="weapons-section">
+          <div class="section-header">
+            <h3>⚔️ Weapons</h3>
+            @if (editMode()) {
+              <button (click)="addWeapon()" class="btn-add">+</button>
+            }
+          </div>
+          
+          @for (weapon of s.weapons; track $index) {
+            <div class="weapon-card">
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="weapon.name" class="weapon-input" placeholder="Name">
+                <input type="text" [(ngModel)]="weapon.damage" class="weapon-input-sm" placeholder="1d8">
+                <input type="text" [(ngModel)]="weapon.damageType" class="weapon-input-sm" placeholder="Type">
+                <input type="number" [(ngModel)]="weapon.attackBonus" class="weapon-input-sm" placeholder="+0">
+                <button (click)="removeWeapon($index)" class="btn-remove">🗑️</button>
+              } @else {
+                <div class="weapon-display">
+                  <h4>{{ weapon.name }}</h4>
+                  <p>Damage: {{ weapon.damage }} ({{ weapon.damageType }})</p>
+                  <p>Attack: {{ formatModifier(weapon.attackBonus) }}</p>
+                  @if (weapon.properties) {
+                    <p class="weapon-properties">{{ weapon.properties }}</p>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Spells -->
+        @if (s.spells.length > 0) {
+          <section class="spells-section">
+            <div class="section-header">
+              <h3>✨ Spells</h3>
+              @if (editMode()) {
+                <button (click)="addSpell()" class="btn-add">+</button>
+              }
+            </div>
+
+            @if (s.spellSlots) {
+              <div class="spell-slots">
+                @for (level of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track level) {
+                  @if (s.spellSlots![level] && s.spellSlots![level].max > 0) {
+                    <div class="slot-row">
+                      <span>Lv {{ level }}:</span>
+                      <span>{{ s.spellSlots![level].current }} / {{ s.spellSlots![level].max }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            }
+
+            @for (spell of s.spells; track $index) {
+              <div class="spell-card">
+                @if (editMode()) {
+                  <input type="text" [(ngModel)]="spell.name" placeholder="Spell Name">
+                  <input type="number" [(ngModel)]="spell.level" placeholder="Level">
+                  <button (click)="removeSpell($index)" class="btn-remove">🗑️</button>
+                } @else {
+                  <h4>{{ spell.name }} @if (spell.level > 0) { (Lv {{ spell.level }}) } @else { (Cantrip) }</h4>
+                  <p class="spell-meta">{{ spell.school }} • {{ spell.castingTime }} • {{ spell.range }}</p>
+                  <p>{{ spell.description }}</p>
+                }
+              </div>
+            }
+          </section>
+        }
+
+        <!-- Features & Traits -->
+        <section class="features-section">
+          <h3>🎯 Features & Traits</h3>
+          @for (feature of s.features; track $index) {
+            <div class="feature-tag">{{ feature }}</div>
+          }
+          @for (trait of s.traits; track $index) {
+            <div class="trait-tag">{{ trait }}</div>
+          }
+        </section>
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="loading">
+    <p>Caricamento scheda personaggio...</p>
+  </div>
+}

@@ -1,0 +1,21 @@
+<div class="header">
+  <div class="header-left"></div>
+  <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 40px; background: transparent">
+    <h1 style="line-height: 40px; text-align: center; margin: 0; font-size: 30px;">
+      ⚔️ Combat Arena
+    </h1>
+  </div>
+  <div class="header-right"></div>
+  <button class="back" style="position: absolute;" (click)="goBack()">
+    <img src="/assets/img/back-arrow.png" style="width: 20px; margin-top: 10px;" alt="Back" />
+  </button>
+</div>
+
+<div class="combat-container" style="padding-top: 60px;">
+  <div #gameContainer class="game-container"></div>
+
+  <div class="combat-info">
+    <p>Use ATTACK, SPELL, or DEFEND buttons in the game</p>
+    <p>Stats loaded from your character sheet</p>
+  </div>
+</div>

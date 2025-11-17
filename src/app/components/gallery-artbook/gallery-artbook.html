@@ -1,0 +1,63 @@
+<div class="header">
+  <div class="header-left"></div>
+  <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 40px; background: transparent">
+    <h1 style="line-height: 40px; text-align: center; margin: 0; font-size: 30px;">
+      Artbook
+    </h1>
+  </div>
+  <div class="header-right"></div>
+  <button class="back" style="position: absolute;" (click)="goBack()">
+    <img src="/assets/img/back-arrow.png" style="width: 20px; margin-top: 10px;" alt="Back" />
+  </button>
+</div>
+
+<div class="artbook-container" (keydown)="onKeydown($event)" tabindex="0">
+  <div #flipBook class="flipbook">
+    <!-- Copertina -->
+    <div class="page page-cover">
+      <div class="page-content">
+        <img [src]="'/assets/img/' + coverImage" alt="Dragon Busters" class="cover-image">
+        <h1 class="cover-title">Dragon Busters<br>Artbook</h1>
+      </div>
+    </div>
+
+    <!-- Pagine con immagini -->
+    @for (page of getPages(); track $index) {
+      <div class="page">
+        <div class="page-content">
+          @if (page.left) {
+            <img [src]="page.left" alt="Artwork" class="artwork-image">
+          }
+        </div>
+      </div>
+      @if (page.right) {
+        <div class="page">
+          <div class="page-content">
+            <img [src]="page.right" alt="Artwork" class="artwork-image">
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Pagina finale -->
+    <div class="page">
+      <div class="page-content page-end">
+        <h2>Fine</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation">
+    <button 
+      class="nav-button prev" 
+      (click)="prevPage()">
+      ‹
+    </button>
+    <span class="page-indicator">{{ currentPage() + 1 }} / {{ totalPages() }}</span>
+    <button 
+      class="nav-button next" 
+      (click)="nextPage()">
+      ›
+    </button>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+}
+
+// Gli stili per header sono definiti in style.css globale
+
+.back {
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.content-wrapper {
+  padding: 80px 20px 20px 20px;
+  background: #3c397124;
+  min-height: 100vh;
+}
+
+.story-section {
+  margin-bottom: 50px;
+  background: url('/assets/img/pergamena.png');
+  background-size: cover;
+  border: 1px solid black;
+  padding: 10px;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    height: 20px;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/assets/img/pergamena.png');
+    border-radius: 10px;
+    border: 2px solid black;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: -10px;
+    right: -10px;
+    height: 20px;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/assets/img/pergamena.png');
+    border-radius: 10px;
+    border: 2px solid black;
+  }
+}

@@ -1,0 +1,108 @@
+<div class="header">
+  <div class="header-left"></div>
+  <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 40px; background: transparent">
+    <h1 style="line-height: 40px; text-align: center; margin: 0; font-size: 30px;">
+      📝 Appunti di {{ character() | titlecase }}
+    </h1>
+  </div>
+  <div class="header-right"></div>
+  <button class="back" style="position: absolute;" (click)="goBack()">
+    <img src="/assets/img/back-arrow.png" style="width: 20px; margin-top: 10px;" alt="Back" />
+  </button>
+</div>
+
+<div class="notes-container" style="padding-top: 60px;">
+  <header class="notes-header">
+    <h1>📝 Appunti di {{ character() | titlecase }}</h1>
+    <button class="btn-add-note" (click)="openNewNoteForm()">
+      ➕ Nuova Nota
+    </button>
+  </header>
+
+  <!-- Form Nuova/Modifica Nota -->
+  @if (showForm()) {
+    <div class="note-form-overlay" (click)="closeForm()">
+      <div class="note-form" (click)="$event.stopPropagation()">
+        <h2>{{ editingNote() ? 'Modifica Nota' : 'Nuova Nota' }}</h2>
+        
+        <div class="form-group">
+          <label for="note-title">Titolo</label>
+          <input
+            id="note-title"
+            type="text"
+            [(ngModel)]="noteTitle"
+            placeholder="Es: Indizi sulla False Hydra"
+            class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="note-content">Contenuto</label>
+          <textarea
+            id="note-content"
+            [(ngModel)]="noteContent"
+            placeholder="Scrivi qui i tuoi appunti..."
+            rows="10"
+            class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="note-tags">Tags (separati da virgola)</label>
+          <input
+            id="note-tags"
+            type="text"
+            [(ngModel)]="noteTags"
+            placeholder="Es: mostro, indagine, png"
+            class="form-input">
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="closeForm()">Annulla</button>
+          <button class="btn-save" (click)="saveNote()">
+            {{ editingNote() ? 'Salva Modifiche' : 'Crea Nota' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lista Note -->
+  <div class="notes-grid">
+    @if (notes().length === 0) {
+      <div class="empty-state">
+        <p>📖 Nessuna nota ancora. Inizia a scrivere i tuoi appunti!</p>
+      </div>
+    }
+
+    @for (note of notes(); track note.id) {
+      <div class="note-card">
+        <div class="note-card-header">
+          <h3>{{ note.title }}</h3>
+          <div class="note-actions">
+            <button class="btn-icon" (click)="openEditForm(note)" title="Modifica">
+              ✏️
+            </button>
+            <button class="btn-icon" (click)="deleteNote(note)" title="Elimina">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <p class="note-content">{{ note.content }}</p>
+
+        @if (note.tags && note.tags.length > 0) {
+          <div class="note-tags">
+            @for (tag of note.tags; track tag) {
+              <span class="tag">{{ tag }}</span>
+            }
+          </div>
+        }
+
+        <div class="note-footer">
+          <small>
+            Aggiornato il {{ formatDate(note.updatedAt) }}
+          </small>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,53 @@
+<div class="black-layer">
+  <span style="position: absolute; top:5px; right: 5px; font-size: small;">v.1.0.0</span>
+  <div class="intro-container">
+    <h1 class="fade-in" [class.hidden]="!showWelcome()">Benvenuto</h1>
+    <h2 class="fade-in" [class.hidden]="!showQuestion()">Dimmi, qual è il tuo nome?</h2>
+    <div [class.hidden]="!showButtons()">
+      @for (character of characters; track character.name) {
+        <button 
+          class="fade-in button" 
+          [id]="character.route"
+          (click)="openPinDialog(character)">
+          {{ character.name }}
+        </button>
+      }
+      <h2 class="fade-in">Oppure vuoi consultarlo?</h2>
+      <button 
+        class="fade-in button" 
+        id="diary"
+        (click)="goToDiary()">
+        Diario di viaggio
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog PIN -->
+<div 
+  class="dialog-overlay" 
+  [style.display]="showDialog() ? 'flex' : 'none'"
+  (click)="onOverlayClick($event)">
+  <div 
+    class="dialog" 
+    #dialogElement
+    [style.background]="selectedCharacter() ? getDialogBackground(selectedCharacter()!.name) : ''">
+    <h2>Inserisci il PIN</h2>
+    <div class="pin-inputs">
+      @for (digit of [0, 1, 2, 3]; track digit) {
+        <input 
+          #pinInput
+          class="pin-input" 
+          type="password" 
+          pattern="[0-9]*" 
+          inputmode="numeric" 
+          maxlength="1"
+          [(ngModel)]="pinDigits[digit]"
+          (input)="onPinInput($event, digit)"
+          (keydown)="onPinKeydown($event, digit)" />
+      }
+    </div>
+    <button (click)="submitPin()">Conferma</button>
+    <button class="cancel" (click)="closeDialog()">Annulla</button>
+  </div>
+</div>

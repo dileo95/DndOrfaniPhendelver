@@ -1,0 +1,68 @@
+/* Character History styles */
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+// Gli stili per header sono definiti in style.css globale
+
+.history-content {
+  padding: 80px 20px 40px 20px;
+  min-height: 100vh;
+}
+
+.back {
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.story-container {
+  background: linear-gradient(360deg, #c3762c, #e0be5a, #c3762c);
+  border: 1px solid black;
+  padding: 10px;
+  position: relative;
+  margin-top: 20px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    height: 20px;
+    background: #a8580e;
+    border-radius: 10px;
+    border: 2px solid black;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: -10px;
+    right: -10px;
+    height: 20px;
+    background: #a8580e;
+    border-radius: 10px;
+    border: 2px solid black;
+  }
+
+  h1 {
+    color: #000;
+    margin: 20px 0 10px 0;
+  }
+
+  p {
+    color: #000;
+    line-height: 1.6;
+    margin: 10px 0;
+  }
+
+  img {
+    border-radius: 10px;
+    border: 2px solid black;
+  }
+}
