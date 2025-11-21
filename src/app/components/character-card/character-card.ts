@@ -21,10 +21,10 @@ export class CharacterCard implements OnInit, OnDestroy {
   cardElement = viewChild<ElementRef<HTMLDivElement>>('cardElement');
 
   private characterConfigs: Record<string, CharacterCardConfig> = {
-    'asriel': { name: 'Asriel', image: '/assets/img/1732548390648444.png' },
-    'auryn': { name: 'Auryn', image: '/assets/img/1732611316478019.png' },
-    'ravel': { name: 'Ravel', image: '/assets/img/1732615783594140.png' },
-    'ruben': { name: 'Ruben', image: '/assets/img/Ruben.png' }
+    'asriel': { name: 'Asriel', image: 'assets/img/1732548390648444.png' },
+    'auryn': { name: 'Auryn', image: 'assets/img/1732611316478019.png' },
+    'ravel': { name: 'Ravel', image: 'assets/img/1732615783594140.png' },
+    'ruben': { name: 'Ruben', image: 'assets/img/Ruben.png' }
   };
 
   constructor(

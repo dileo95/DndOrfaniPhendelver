@@ -64,7 +64,7 @@ export class Intro implements OnInit {
   }
 
   getDialogBackground(characterName: string): string {
-    return `url("/assets/img/${characterName}-blur.png")`;
+    return `url("assets/img/${characterName}-blur.png")`;
   }
 
   onPinInput(event: Event, index: number): void {
