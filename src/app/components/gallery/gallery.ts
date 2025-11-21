@@ -116,8 +116,8 @@ export class Gallery implements AfterViewInit {
     const pages = [];
     for (let i = 0; i < this.images.length; i += 2) {
       pages.push({
-        left: `/assets/img/${this.images[i]}`,
-        right: i + 1 < this.images.length ? `/assets/img/${this.images[i + 1]}` : null
+        left: `./assets/img/${this.images[i]}`,
+        right: i + 1 < this.images.length ? `./assets/img/${this.images[i + 1]}` : null
       });
     }
     return pages;

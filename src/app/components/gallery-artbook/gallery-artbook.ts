@@ -45,7 +45,7 @@ export class GalleryArtbook implements OnInit, AfterViewInit {
       // Preload images
       this.images.forEach(img => {
         const image = new Image();
-        image.src = `/assets/img/${img}`;
+        image.src = `./assets/img/${img}`;
       });
     }
   }
@@ -120,8 +120,8 @@ export class GalleryArtbook implements OnInit, AfterViewInit {
     const pages = [];
     for (let i = 0; i < this.images.length; i += 2) {
       pages.push({
-        left: `/assets/img/${this.images[i]}`,
-        right: i + 1 < this.images.length ? `/assets/img/${this.images[i + 1]}` : null
+        left: `./assets/img/${this.images[i]}`,
+        right: i + 1 < this.images.length ? `./assets/img/${this.images[i + 1]}` : null
       });
     }
     return pages;
