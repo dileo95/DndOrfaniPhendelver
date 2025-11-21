@@ -5,6 +5,7 @@ export interface Character {
   name: string;
   pin: string;
   route: string;
+  enabled: boolean;
 }
 
 @Injectable({
@@ -12,10 +13,10 @@ export interface Character {
 })
 export class Auth {
   private readonly characters: Character[] = [
-    { name: 'Asriel', pin: '4567', route: 'asriel' },
-    { name: 'Auryn', pin: '0606', route: 'auryn' },
-    { name: 'Ravel', pin: '4690', route: 'ravel' },
-    { name: 'Ruben', pin: '8995', route: 'ruben' }
+    { name: 'Asriel', pin: '4567', route: 'asriel', enabled: true },
+    { name: 'Auryn', pin: '0606', route: 'auryn', enabled: false },
+    { name: 'Ravel', pin: '4690', route: 'ravel', enabled: false },
+    { name: 'Ruben', pin: '8995', route: 'ruben', enabled: true }
   ];
 
   // Stato autenticazione per ogni personaggio

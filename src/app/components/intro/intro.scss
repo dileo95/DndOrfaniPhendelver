@@ -44,6 +44,20 @@
   background: #ff8b7f;
 }
 
+.button.disabled,
+.button:disabled {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.button.disabled:hover,
+.button:disabled:hover {
+  background: #ff6f61;
+  transform: none;
+}
+
 /* Fade-in animation */
 .fade-in {
   display: block;

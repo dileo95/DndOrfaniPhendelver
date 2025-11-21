@@ -180,7 +180,3 @@ src/
 ## 📄 Licenza
 
 Questo progetto è privato e destinato all'uso personale per la campagna D&D.
-
-## 🤝 Contributi
-
-Per suggerimenti o bug, apri una issue su GitHub!

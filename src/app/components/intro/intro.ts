@@ -40,6 +40,10 @@ export class Intro implements OnInit {
   }
 
   openPinDialog(character: Character): void {
+    // Don't open dialog for disabled characters
+    if (!character.enabled) {
+      return;
+    }
     this.selectedCharacter.set(character);
     this.showDialog.set(true);
     this.scroll.disable();

@@ -8,6 +8,8 @@
         <button 
           class="fade-in button" 
           [id]="character.route"
+          [class.disabled]="!character.enabled"
+          [disabled]="!character.enabled"
           (click)="openPinDialog(character)">
           {{ character.name }}
         </button>

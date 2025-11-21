@@ -22,6 +22,7 @@
       <div class="header-actions">
         @if (!editMode()) {
           <button class="btn-edit" (click)="toggleEditMode()">✏️ Modifica</button>
+          <button class="btn-export" (click)="exportToPDF()">📄 Esporta PDF</button>
         } @else {
           <button class="btn-save" (click)="saveSheet()">💾 Salva</button>
           <button class="btn-cancel" (click)="toggleEditMode()">❌ Annulla</button>

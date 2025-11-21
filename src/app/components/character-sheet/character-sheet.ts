@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatabaseService, CharacterSheet as Sheet, Weapon, Spell } from '../../services/database.service';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-character-sheet',
@@ -398,4 +400,138 @@ export class CharacterSheet implements OnInit {
   goBack() {
     this.router.navigate([this.character(), 'home']);
   }
+
+  async exportToPDF() {
+    const sheet = this.sheet();
+    if (!sheet) return;
+
+    // Creo HTML invisibile con layout D&D
+    const printDiv = document.createElement('div');
+    printDiv.style.position = 'absolute';
+    printDiv.style.left = '-9999px';
+    printDiv.style.width = '794px'; // A4 width in px at 96dpi
+    printDiv.style.height = '1123px'; // A4 height
+    printDiv.style.backgroundColor = 'white';
+    printDiv.style.padding = '40px';
+    printDiv.style.fontFamily = 'Arial, sans-serif';
+    
+    printDiv.innerHTML = `
+      <div style="text-align: center; border-bottom: 3px solid #8B4513; padding-bottom: 20px; margin-bottom: 20px;">
+        <h1 style="margin: 0; font-size: 32px; color: #8B4513;">${sheet.character.toUpperCase()}</h1>
+        <p style="margin: 5px 0; font-size: 16px; color: #555;">${sheet.race} ${sheet.class} - Livello ${sheet.level}</p>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 20px;">
+        <!-- Colonna Sinistra: Caratteristiche -->
+        <div>
+          <h3 style="border-bottom: 2px solid #8B4513; margin-bottom: 10px;">CARATTERISTICHE</h3>
+          ${this.generateAbilityHTML('FORZA', sheet.strength, this.strModifier())}
+          ${this.generateAbilityHTML('DESTREZZA', sheet.dexterity, this.dexModifier())}
+          ${this.generateAbilityHTML('COSTITUZIONE', sheet.constitution, this.conModifier())}
+          ${this.generateAbilityHTML('INTELLIGENZA', sheet.intelligence, this.intModifier())}
+          ${this.generateAbilityHTML('SAGGEZZA', sheet.wisdom, this.wisModifier())}
+          ${this.generateAbilityHTML('CARISMA', sheet.charisma, this.chaModifier())}
+        </div>
+        
+        <!-- Colonna Centrale -->
+        <div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div style="border: 2px solid #8B4513; padding: 10px; text-align: center;">
+              <div style="font-size: 11px;">CLASSE ARMATURA</div>
+              <div style="font-size: 24px; font-weight: bold;">${sheet.armorClass}</div>
+            </div>
+            <div style="border: 2px solid #8B4513; padding: 10px; text-align: center;">
+              <div style="font-size: 11px;">INIZIATIVA</div>
+              <div style="font-size: 24px; font-weight: bold;">${this.formatModifier(sheet.initiative)}</div>
+            </div>
+            <div style="border: 2px solid #8B4513; padding: 10px; text-align: center;">
+              <div style="font-size: 11px;">VELOCITÀ</div>
+              <div style="font-size: 24px; font-weight: bold;">${sheet.speed}</div>
+            </div>
+          </div>
+          
+          <div style="border: 2px solid #8B4513; padding: 15px; margin-bottom: 20px;">
+            <div style="text-align: center; margin-bottom: 10px;">
+              <div style="font-size: 11px;">PUNTI FERITA MASSIMI</div>
+              <div style="font-size: 18px; font-weight: bold;">${sheet.maxHP}</div>
+            </div>
+            <div style="text-align: center; border: 3px solid #8B4513; padding: 20px; margin-bottom: 10px;">
+              <div style="font-size: 36px; font-weight: bold; color: #8B4513;">${sheet.currentHP}</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 10px;">PF TEMPORANEI</div>
+              <div style="font-size: 14px;">${sheet.temporaryHP}</div>
+            </div>
+          </div>
+          
+          <h4 style="border-bottom: 1px solid #8B4513;">ARMI</h4>
+          ${sheet.weapons?.map(w => `
+            <div style="font-size: 11px; margin-bottom: 5px;">
+              <strong>${w.name}</strong> - +${w.attackBonus} colpire, ${w.damage}
+            </div>
+          `).join('') || ''}
+        </div>
+        
+        <!-- Colonna Destra: Skills -->
+        <div>
+          <h3 style="border-bottom: 2px solid #8B4513; margin-bottom: 10px;">ABILITÀ</h3>
+          <div style="font-size: 10px;">
+            ${this.allSkills.map(skill => `
+              <div style="margin-bottom: 3px;">
+                <span style="font-weight: bold;">${this.formatModifier(this.getSkillBonus(skill.name))}</span> 
+                ${skill.name} (${skill.ability})
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-top: 20px;">
+        <h4 style="border-bottom: 1px solid #8B4513;">TRATTI & CARATTERISTICHE</h4>
+        <div style="font-size: 11px;">
+          ${sheet.features?.map(f => `• ${f}`).join('<br>') || ''}
+        </div>
+      </div>
+      
+      <div style="position: absolute; bottom: 10px; right: 10px; font-size: 9px; color: #999;">
+        Phendelver App - Generated ${new Date().toLocaleDateString()}
+      </div>
+    `;
+    
+    document.body.appendChild(printDiv);
+
+    try {
+      const canvas = await html2canvas(printDiv, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${sheet.character}_CharacterSheet.pdf`);
+      
+    } catch (error) {
+      console.error('Errore generazione PDF:', error);
+      alert('Errore durante la generazione del PDF');
+    } finally {
+      document.body.removeChild(printDiv);
+    }
+  }
+  
+  private generateAbilityHTML(name: string, score: number, modifier: number): string {
+    return `
+      <div style="border: 2px solid #8B4513; padding: 8px; margin-bottom: 8px; text-align: center;">
+        <div style="font-size: 10px; font-weight: bold;">${name}</div>
+        <div style="font-size: 20px; font-weight: bold; color: #8B4513;">${this.formatModifier(modifier)}</div>
+        <div style="font-size: 12px; margin-top: 4px;">(${score})</div>
+      </div>
+    `;
+  }
+
+
 }
