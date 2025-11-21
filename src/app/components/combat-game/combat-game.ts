@@ -61,7 +61,7 @@ function createCombatScene(PhaserLib: any) {
     this['load'].audio('bgMusic', './assets/sound/combat-music.WAV');
     
     // Load character spritesheets dynamically (64x64 per frame, row 4 for SE direction)
-    const charPath = `assets/spritesheet/${this.character}_animation/standard`;
+    const charPath = `./assets/spritesheet/${this.character}_animation/standard`;
     this['load'].spritesheet('player_idle', `${charPath}/combat_idle.png`, {
       frameWidth: 64,
       frameHeight: 64
