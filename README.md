@@ -1,6 +1,6 @@
 # 🐉 Phendelver - D&D Campaign Companion
 
-Una Progressive Web App interattiva per la campagna D&D "Gli Orfani di Phendelver". Costruita con Angular 20, questa applicazione offre un'esperienza immersiva per giocatori e master con gestione personaggi, combattimento dinamico, e visualizzazioni interattive della storia.
+Una Progressive Web App interattiva per la campagna D&D "Gli Orfani di Phendelver". Costruita con Angular 20, questa applicazione offre un'esperienza immersiva per giocatori e master con gestione personaggi, combattimento dinamico, e visualizzazioni interattive della storia. Questa applicazione è costruita specificamente per un uso personale nella attuale campagna che sto portando avanti.
 
 ## ✨ Caratteristiche Principali
 
