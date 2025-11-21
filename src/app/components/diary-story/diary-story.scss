@@ -21,7 +21,7 @@
 }
 
 .story-section {
-  background: url('assets/img/pergamena.png');
+  background: url('../../../assets/img/pergamena.png');
   background-size: cover;
   border: 1px solid black;
   padding: 10px;
@@ -34,7 +34,7 @@
     left: -10px;
     right: -10px;
     height: 20px;
-    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('assets/img/pergamena.png');
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../../../assets/img/pergamena.png');
     border-radius: 10px;
     border: 2px solid black;
   }
@@ -46,7 +46,7 @@
     left: -10px;
     right: -10px;
     height: 20px;
-    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('assets/img/pergamena.png');
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../../../assets/img/pergamena.png');
     border-radius: 10px;
     border: 2px solid black;
   }
