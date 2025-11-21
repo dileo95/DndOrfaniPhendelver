@@ -28,21 +28,18 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        working-directory: ./angular-phendelver
         run: npm ci
 
       - name: Build
-        working-directory: ./angular-phendelver
         run: npm run build:gh-pages
 
       - name: Copy 404.html for SPA routing
-        working-directory: ./angular-phendelver
         run: cp dist/angular-phendelver/browser/index.html dist/angular-phendelver/browser/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./angular-phendelver/dist/angular-phendelver/browser
+          path: dist/angular-phendelver/browser
 
   deploy:
     environment:
