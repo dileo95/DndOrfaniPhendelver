@@ -68,13 +68,6 @@ API_URL=https://your-api.com
 FIREBASE_CONFIG=...
 ```
 
-### PIN Personaggi
-I PIN sono configurati in `auth.service.ts`:
-- Asriel: 1234
-- Auryn: 5678
-- Ravel: 9012
-- Ruben: 3456
-
 ## 🛠️ Comandi Disponibili
 
 ```bash
