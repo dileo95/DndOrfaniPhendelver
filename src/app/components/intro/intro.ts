@@ -114,7 +114,7 @@ export class Intro implements OnInit {
   }
 
   goToForgotten(): void {
-
+    this.router.navigate(['/forgotten']);
   }
 
   goToDiary(): void {

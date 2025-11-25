@@ -15,6 +15,7 @@ import { CharacterSheet } from './components/character-sheet/character-sheet';
 import { CombatGame } from './components/combat-game/combat-game';
 import { StoryMap } from './components/story-map/story-map';
 import { Timeline } from './components/timeline/timeline';
+import { Forgotten } from './components/forgotten/forgotten';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -88,6 +89,10 @@ export const routes: Routes = [
   {
     path: 'cracks',
     component: Cracks
+  },
+  {
+    path: 'forgotten',
+    component: Forgotten
   },
   {
     path: '**',

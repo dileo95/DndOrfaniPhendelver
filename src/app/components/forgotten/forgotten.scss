@@ -1,0 +1,64 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.forgotten-content {
+  position: relative;
+  padding: 80px 20px 40px 20px;
+  min-height: 100vh;
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+    url('../../../assets/img/bg_forgotten.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+.back {
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.story-container {
+  background: linear-gradient(360deg, #c3762c, #e0be5a, #c3762c);
+  border: 1px solid black;
+  padding: 15px;
+  position: relative;
+  margin-top: 20px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    height: 20px;
+    background: #a8580e;
+    border-radius: 10px;
+    border: 2px solid black;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: -10px;
+    right: -10px;
+    height: 20px;
+    background: #a8580e;
+    border-radius: 10px;
+    border: 2px solid black;
+  }
+
+  p {
+    color: white;
+    line-height: 1.6;
+    margin: 10px 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+}
