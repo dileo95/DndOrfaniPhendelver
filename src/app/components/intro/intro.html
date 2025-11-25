@@ -5,14 +5,14 @@
     <h2 class="fade-in" [class.hidden]="!showQuestion()">Dimmi, qual è il tuo nome?</h2>
     <div [class.hidden]="!showButtons()">
       @for (character of characters; track character.name) {
-        <button 
-          class="fade-in button" 
-          [id]="character.route"
-          [class.disabled]="!character.enabled"
-          [disabled]="!character.enabled"
-          (click)="openPinDialog(character)">
-          {{ character.name }}
-        </button>
+        @if (character.enabled) {
+          <button 
+            class="fade-in button" 
+            [id]="character.route"
+            (click)="openPinDialog(character)">
+            {{ character.name }}
+          </button>
+        }
       }
       <h2 class="fade-in">Oppure vuoi consultarlo?</h2>
       <button 

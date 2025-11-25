@@ -1,2 +1,16 @@
 // Gli stili per header, back e diary-button sono definiti in style.css globale
 // Non sovrascriviamo per mantenere l'aspetto originale con pergamena
+
+.auryn-button {
+  background: darkred !important;
+  color: greenyellow !important;
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.ravel-button {
+  background: royalblue !important;
+  color: darkred !important;
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
