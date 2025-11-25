@@ -1,8 +1,40 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const url = require('url');
+const express = require('express');
 
 let mainWindow;
+let server;
+
+// Avvia server express per servire l'app Angular
+function startServer() {
+  return new Promise((resolve, reject) => {
+    try {
+      const serverApp = express();
+      const distPath = path.join(__dirname, 'dist/angular-phendelver/browser');
+      
+      // Serve static files with fallback
+      serverApp.use(express.static(distPath, { 
+        index: 'index.html',
+        fallthrough: true 
+      }));
+      
+      // Catch-all fallback for SPA routing
+      serverApp.use((req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+      
+      // Listen on random available port
+      server = serverApp.listen(0, 'localhost', () => {
+        const port = server.address().port;
+        console.log(`Server started on http://localhost:${port}`);
+        resolve(port);
+      });
+    } catch (error) {
+      console.error('Error starting server:', error);
+      reject(error);
+    }
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -10,7 +42,7 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    icon: path.join(__dirname, 'public/dragon-icon-512x512.png'),
+    icon: path.join(__dirname, 'dist/angular-phendelver/browser/assets/icons/icon-512x512.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -21,14 +53,17 @@ function createWindow() {
     show: false
   });
 
-  // Carica l'applicazione Angular
-  mainWindow.loadURL(
-    url.format({
-      pathname: path.join(__dirname, 'dist/angular-phendelver/browser/index.html'),
-      protocol: 'file:',
-      slashes: true
-    })
-  );
+  // Avvia il server e carica l'URL
+  startServer().then((port) => {
+    const appUrl = `http://localhost:${port}`;
+    console.log('Loading Electron app from:', appUrl);
+    mainWindow.loadURL(appUrl);
+  });
+
+  // Log degli errori di caricamento
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
 
   // Mostra la finestra quando è pronta
   mainWindow.once('ready-to-show', () => {
@@ -44,6 +79,12 @@ function createWindow() {
 }
 
 app.on('ready', createWindow);
+
+app.on('before-quit', () => {
+  if (server) {
+    server.close();
+  }
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

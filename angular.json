@@ -80,6 +80,8 @@
               "server": false,
               "prerender": false,
               "ssr": false,
+              "baseHref": "/",
+              "serviceWorker": false,
               "budgets": [
                 {
                   "type": "initial",

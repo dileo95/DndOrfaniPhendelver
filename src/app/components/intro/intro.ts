@@ -113,6 +113,10 @@ export class Intro implements OnInit {
     }, 0);
   }
 
+  goToForgotten(): void {
+
+  }
+
   goToDiary(): void {
     this.router.navigate(['/diary']);
   }

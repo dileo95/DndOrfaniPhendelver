@@ -131,6 +131,18 @@
   background-color: #00000091;
 }
 
+#forgotten {
+  background: url('../../../assets/img/Annabelle-face.png');
+  background-size: cover;
+  height: 120px;
+  font-size: 44px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position-x: right;
+  border: 2px solid #795b11;
+  background-color: #00000091;
+}
+
 /* Dialog PIN */
 .dialog-overlay {
   position: fixed;

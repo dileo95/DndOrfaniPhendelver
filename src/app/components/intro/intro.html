@@ -1,8 +1,8 @@
 <div class="black-layer">
   <span style="position: absolute; top:5px; right: 5px; font-size: small;">v.1.0.0</span>
   <div class="intro-container">
-    <h1 class="fade-in" [class.hidden]="!showWelcome()">Benvenuto</h1>
-    <h2 class="fade-in" [class.hidden]="!showQuestion()">Dimmi, qual è il tuo nome?</h2>
+    <h1 class="fade-in" [class.hidden]="!showWelcome()">I fili si intrecciano</h1>
+    <h2 class="fade-in" [class.hidden]="!showQuestion()">Tieni in alto la spada</h2>
     <div [class.hidden]="!showButtons()">
       @for (character of characters; track character.name) {
         @if (character.enabled) {
@@ -14,7 +14,12 @@
           </button>
         }
       }
-      <h2 class="fade-in">Oppure vuoi consultarlo?</h2>
+      <button 
+        class="fade-in button" 
+        id="forgotten"
+        (click)="goToForgotten()">
+        Forgotten Tale
+      </button>
       <button 
         class="fade-in button" 
         id="diary"

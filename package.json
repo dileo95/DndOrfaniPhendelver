@@ -28,7 +28,8 @@
     },
     "files": [
       "dist/angular-phendelver/browser/**/*",
-      "electron-main.js"
+      "electron-main.js",
+      "node_modules/express/**/*"
     ],
     "win": {
       "target": "nsis",
