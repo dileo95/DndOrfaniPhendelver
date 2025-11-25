@@ -2,15 +2,29 @@
 // Non sovrascriviamo per mantenere l'aspetto originale con pergamena
 
 .auryn-button {
-  background: darkred !important;
-  color: greenyellow !important;
+  background: url('../../../assets/img/auryn-face.png') !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position-x: right !important;
+  background-color: #00000091 !important;
+  border: 2px solid #795b11 !important;
+  height: 120px !important;
+  font-size: 44px !important;
   opacity: 0.6;
   cursor: not-allowed !important;
+  color: white !important;
 }
 
 .ravel-button {
-  background: royalblue !important;
-  color: darkred !important;
+  background: url('../../../assets/img/Ravel-face.png') !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position-x: right !important;
+  background-color: #00000091 !important;
+  border: 2px solid #795b11 !important;
+  height: 120px !important;
+  font-size: 44px !important;
   opacity: 0.6;
   cursor: not-allowed !important;
+  color: white !important;
 }

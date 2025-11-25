@@ -15,11 +15,11 @@ export class Diary implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.scrollService.disable();
+    // Scroll enabled by default for diary navigation
   }
 
   ngOnDestroy(): void {
-    this.scrollService.enable();
+    // No need to re-enable scroll
   }
 
   navigate(section: string): void {

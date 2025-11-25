@@ -43,7 +43,7 @@ export class CharacterHome implements OnInit, OnDestroy {
       this.characterClass = config.class;
     }
 
-    this.scroll.disable();
+    // Scroll enabled by default for character home navigation
   }
 
   navigate(section: 'history' | 'card' | 'dice' | 'notes' | 'sheet' | 'combat'): void {
@@ -55,6 +55,6 @@ export class CharacterHome implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.scroll.enable();
+    // No need to re-enable scroll
   }
 }
