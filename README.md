@@ -143,17 +143,33 @@ src/
 - [x] Combat game turn-based con Phaser
 - [x] Sprite animati per combattimenti (Asriel, Ruben)
 - [x] Timeline interattiva con D3
-- [x] Story Map con grafo force-directed
+- [x] Story Map con grafo force-directed + zoom/pan/search
 - [x] Dado virtuale 3D
 - [x] Artbook sfogliabile
 - [x] Responsive design
+- [x] Migrazione SCSS da @import a @use
+- [x] Combat: Sistema nemici (12 tipi con CR 1/4 a CR 5)
+- [x] Combat: Selezione nemico con card colorate
+- [x] Combat: Integrazione armi dal Character Sheet
+- [x] Combat: Sistema magie con cantrip e spell slots
+- [x] Combat: Azioni Difesa (+2 CA) e Pozione (2d4+2)
+- [x] Combat: Turni nemico automatici con abilità speciali
+- [x] Combat: Sprite nemici stilizzati per tipo (humanoid/beast/undead/giant)
+- [x] Combat: Effetti visivi (slash, proiettili magici, scudo, heal)
+- [x] Combat: Animazioni breathing, morte, vittoria con confetti
 
 ### 🚧 In Sviluppo
 - [ ] Visual Novel con Ink.js per narrazione interattiva
 - [ ] Sprite per Auryn e Ravel
-- [ ] Sistema di nemici multipli nel combat
-- [ ] Gestione spell slots nella scheda
-- [ ] Export scheda personaggio in PDF
+
+### 💡 Combat Game - Miglioramenti Futuri
+- [ ] Suoni effetti (attacchi, magie, hit, miss, vittoria)
+- [ ] Difficoltà dinamica - suggerire nemici in base al livello PG
+- [ ] Multi-attacco per alcuni nemici (Gufolorso, Ghast)
+- [ ] Condizioni di stato (Paralisi Ghoul, Fetore Ghast)
+- [ ] Tiri Salvezza contro effetti nemici
+- [ ] Storico combattimenti (visualizza dal DB)
+- [ ] Sistema Loot/Ricompense dopo vittoria
 
 ### 💡 Idee Future
 - [ ] Multiplayer sync tramite Firebase
@@ -163,6 +179,8 @@ src/
 - [ ] Mappa interattiva di Phendelver
 - [ ] Inventory system
 - [ ] Quest tracker
+- [ ] Export scheda personaggio in PDF
+- [ ] Gestione spell slots nella scheda
 
 ## 🎨 Credits
 

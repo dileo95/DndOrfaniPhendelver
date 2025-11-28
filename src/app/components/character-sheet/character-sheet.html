@@ -3,7 +3,7 @@
   <div class="header-left"></div>
   <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 40px; background: transparent">
     <h1 style="line-height: 40px; text-align: center; margin: 0; font-size: 30px;">
-      📋 {{ s.character | titlecase }}
+      📋 {{ s.characterName || s.character | titlecase }}
     </h1>
   </div>
   <div class="header-right"></div>
@@ -12,161 +12,378 @@
   </button>
 </div>
 
-  <div class="sheet-container" style="padding-top: 60px;">
-    <header class="sheet-header">
-      <div class="character-title">
-        <h1>{{ s.character | titlecase }}</h1>
-        <p class="char-info">{{ s.race }} {{ s.class }} - Level {{ s.level }}</p>
+<div class="sheet-container" style="padding-top: 60px;">
+  <!-- Header con info base e azioni -->
+  <header class="sheet-header">
+    <div class="character-title">
+      <div class="title-row">
+        @if (s.characterImage) {
+          <img [src]="s.characterImage" alt="Character" class="character-avatar">
+        }
+        <div class="title-text">
+          <h1>{{ s.characterName || s.character | titlecase }}</h1>
+          <p class="char-info">{{ s.race }}{{ s.subrace ? ' (' + s.subrace + ')' : '' }} • {{ getClassString() || s.class }} • Livello {{ getTotalLevel() }}</p>
+          @if (s.background) {
+            <p class="char-background">{{ s.background }} • {{ s.alignment }}</p>
+          }
+        </div>
       </div>
       
-      <div class="header-actions">
-        @if (!editMode()) {
-          <button class="btn-edit" (click)="toggleEditMode()">✏️ Modifica</button>
-          <button class="btn-export" (click)="exportToPDF()">📄 Esporta PDF</button>
-        } @else {
-          <button class="btn-save" (click)="saveSheet()">💾 Salva</button>
-          <button class="btn-cancel" (click)="toggleEditMode()">❌ Annulla</button>
-        }
+      <!-- Inspiration & XP bar -->
+      <div class="status-row">
+        <button class="inspiration-btn" [class.active]="s.inspiration" (click)="toggleInspiration()">
+          ⭐ Ispirazione
+        </button>
+        <div class="xp-bar">
+          <label>XP: {{ s.experience || 0 }} / {{ getXPForNextLevel() }}</label>
+          <div class="xp-progress">
+            <div class="xp-fill" [style.width.%]="getXPProgress()"></div>
+          </div>
+        </div>
       </div>
-    </header>
+    </div>
+    
+    <div class="header-actions">
+      @if (!editMode()) {
+        <button class="btn-edit" (click)="toggleEditMode()">✏️ Modifica</button>
+        <button class="btn-export" (click)="exportToPDF()">📄 Esporta PDF</button>
+      } @else {
+        <button class="btn-save" (click)="saveSheet()">💾 Salva</button>
+        <button class="btn-cancel" (click)="toggleEditMode()">❌ Annulla</button>
+      }
+    </div>
+  </header>
 
-    <!-- Main Grid -->
-    <div class="sheet-grid">
-      <!-- Left Column: Stats & Skills -->
-      <div class="left-column">
-        <!-- Ability Scores -->
-        <section class="ability-scores">
-          <div class="ability-box">
-            <label>FOR</label>
-            <input type="number" [(ngModel)]="s.strength" [disabled]="!editMode()" class="ability-input">
-            <span class="modifier">{{ formatModifier(strModifier()) }}</span>
-          </div>
-          <div class="ability-box">
-            <label>DES</label>
-            <input type="number" [(ngModel)]="s.dexterity" [disabled]="!editMode()" class="ability-input">
-            <span class="modifier">{{ formatModifier(dexModifier()) }}</span>
-          </div>
-          <div class="ability-box">
-            <label>COS</label>
-            <input type="number" [(ngModel)]="s.constitution" [disabled]="!editMode()" class="ability-input">
-            <span class="modifier">{{ formatModifier(conModifier()) }}</span>
-          </div>
-          <div class="ability-box">
-            <label>INT</label>
-            <input type="number" [(ngModel)]="s.intelligence" [disabled]="!editMode()" class="ability-input">
-            <span class="modifier">{{ formatModifier(intModifier()) }}</span>
-          </div>
-          <div class="ability-box">
-            <label>SAG</label>
-            <input type="number" [(ngModel)]="s.wisdom" [disabled]="!editMode()" class="ability-input">
-            <span class="modifier">{{ formatModifier(wisModifier()) }}</span>
-          </div>
-          <div class="ability-box">
-            <label>CAR</label>
-            <input type="number" [(ngModel)]="s.charisma" [disabled]="!editMode()" class="ability-input">
-            <span class="modifier">{{ formatModifier(chaModifier()) }}</span>
-          </div>
-        </section>
+  <!-- Navigation Tabs -->
+  <nav class="sheet-tabs">
+    <button class="tab-btn" [class.active]="activeTab === 'main'" (click)="activeTab = 'main'">
+      ⚔️ Principale
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'combat'" (click)="activeTab = 'combat'">
+      🛡️ Combattimento
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'spells'" (click)="activeTab = 'spells'">
+      ✨ Incantesimi
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'inventory'" (click)="activeTab = 'inventory'">
+      🎒 Inventario
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'bio'" (click)="activeTab = 'bio'">
+      📜 Background
+    </button>
+  </nav>
 
+  <!-- TAB: MAIN (Stats, Skills, Features) -->
+  @if (activeTab === 'main') {
+    <div class="tab-content">
+      <div class="sheet-grid">
+        <!-- Left Column: Stats & Skills -->
+        <div class="left-column">
+          <!-- Ability Scores -->
+          <section class="ability-scores">
+            <div class="ability-box">
+              <label>FOR</label>
+              <input type="number" [(ngModel)]="s.strength" [disabled]="!editMode()" class="ability-input">
+              <span class="modifier">{{ formatModifier(strModifier()) }}</span>
+            </div>
+            <div class="ability-box">
+              <label>DES</label>
+              <input type="number" [(ngModel)]="s.dexterity" [disabled]="!editMode()" class="ability-input">
+              <span class="modifier">{{ formatModifier(dexModifier()) }}</span>
+            </div>
+            <div class="ability-box">
+              <label>COS</label>
+              <input type="number" [(ngModel)]="s.constitution" [disabled]="!editMode()" class="ability-input">
+              <span class="modifier">{{ formatModifier(conModifier()) }}</span>
+            </div>
+            <div class="ability-box">
+              <label>INT</label>
+              <input type="number" [(ngModel)]="s.intelligence" [disabled]="!editMode()" class="ability-input">
+              <span class="modifier">{{ formatModifier(intModifier()) }}</span>
+            </div>
+            <div class="ability-box">
+              <label>SAG</label>
+              <input type="number" [(ngModel)]="s.wisdom" [disabled]="!editMode()" class="ability-input">
+              <span class="modifier">{{ formatModifier(wisModifier()) }}</span>
+            </div>
+            <div class="ability-box">
+              <label>CAR</label>
+              <input type="number" [(ngModel)]="s.charisma" [disabled]="!editMode()" class="ability-input">
+              <span class="modifier">{{ formatModifier(chaModifier()) }}</span>
+            </div>
+          </section>
+
+          <!-- Saving Throws -->
+          <section class="saving-throws">
+            <h3>🎲 Tiri Salvezza</h3>
+            <div class="saves-grid">
+              @for (save of ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma']; track save) {
+                <div class="save-row" [class.proficient]="hasSavingThrowProficiency(save)" (click)="toggleSavingThrow(save)">
+                  <span class="save-prof">{{ hasSavingThrowProficiency(save) ? '✓' : '○' }}</span>
+                  <span class="save-name">{{ save.substring(0, 3).toUpperCase() }}</span>
+                  <span class="save-bonus">{{ formatModifier(getSavingThrowBonus(save)) }}</span>
+                </div>
+              }
+            </div>
+          </section>
+
+          <!-- Skills -->
+          <section class="skills-section">
+            <h3>📊 Abilità</h3>
+            @for (skill of allSkills; track skill.name) {
+              <div class="skill-row" [class.proficient]="s.skills[skill.name] > 0" (click)="toggleSkillProficiency(skill.name)">
+                <span class="skill-prof">
+                  @if (s.skills[skill.name] === 2) { ⭐ }
+                  @else if (s.skills[skill.name] === 1) { ✓ }
+                  @else { ○ }
+                </span>
+                <span class="skill-name">{{ skill.name }}</span>
+                <span class="skill-ability">({{ skill.ability }})</span>
+                <span class="skill-bonus">{{ formatModifier(getSkillBonus(skill.name)) }}</span>
+              </div>
+            }
+          </section>
+        </div>
+
+        <!-- Right Column: Classes, Features, Proficiencies -->
+        <div class="right-column">
+          <!-- Classes (Multiclass support) -->
+          <section class="classes-section">
+            <div class="section-header">
+              <h3>📚 Classi</h3>
+              @if (editMode()) {
+                <button (click)="addClass()" class="btn-add">+</button>
+              }
+            </div>
+            @if (s.classes && s.classes.length > 0) {
+              @for (cls of s.classes; track $index) {
+                <div class="class-card">
+                  @if (editMode()) {
+                    <input type="text" [(ngModel)]="cls.name" placeholder="Classe" class="class-input">
+                    <input type="text" [(ngModel)]="cls.subclass" placeholder="Sottoclasse" class="class-input">
+                    <input type="number" [(ngModel)]="cls.level" placeholder="Liv" class="class-input-sm">
+                    <select [(ngModel)]="cls.hitDie" class="class-input-sm">
+                      <option [value]="6">d6</option>
+                      <option [value]="8">d8</option>
+                      <option [value]="10">d10</option>
+                      <option [value]="12">d12</option>
+                    </select>
+                    <button (click)="removeClass($index)" class="btn-remove">🗑️</button>
+                  } @else {
+                    <div class="class-display">
+                      <span class="class-name">{{ cls.name }}</span>
+                      @if (cls.subclass) {
+                        <span class="class-subclass">({{ cls.subclass }})</span>
+                      }
+                      <span class="class-level">Lv {{ cls.level }}</span>
+                      <span class="class-hitdie">d{{ cls.hitDie }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              <!-- Fallback per classi non array -->
+              <div class="class-card">
+                <div class="class-display">
+                  <span class="class-name">{{ s.class }}</span>
+                  <span class="class-level">Lv {{ s.level }}</span>
+                </div>
+              </div>
+            }
+          </section>
+
+          <!-- Proficiencies -->
+          <section class="proficiencies-section">
+            <h3>🎯 Competenze</h3>
+            
+            <div class="prof-group">
+              <label>Lingue:</label>
+              @if (editMode()) {
+                <input type="text" [ngModel]="getLanguagesString()" 
+                       (ngModelChange)="setLanguages($event)"
+                       placeholder="Common, Elvish...">
+              } @else {
+                <span>{{ getLanguagesString() || 'Nessuna' }}</span>
+              }
+            </div>
+
+            <div class="prof-group">
+              <label>Armature:</label>
+              @if (editMode()) {
+                <input type="text" [ngModel]="getArmorProfString()" 
+                       (ngModelChange)="setArmorProficiencies($event)"
+                       placeholder="Light, Medium...">
+              } @else {
+                <span>{{ getArmorProfString() || 'Nessuna' }}</span>
+              }
+            </div>
+
+            <div class="prof-group">
+              <label>Armi:</label>
+              @if (editMode()) {
+                <input type="text" [ngModel]="getWeaponProfString()" 
+                       (ngModelChange)="setWeaponProficiencies($event)"
+                       placeholder="Simple, Martial...">
+              } @else {
+                <span>{{ getWeaponProfString() || 'Nessuna' }}</span>
+              }
+            </div>
+
+            <div class="prof-group">
+              <label>Strumenti:</label>
+              @if (editMode()) {
+                <input type="text" [ngModel]="getToolProfString()" 
+                       (ngModelChange)="setToolProficiencies($event)"
+                       placeholder="Thieves' Tools...">
+              } @else {
+                <span>{{ getToolProfString() || 'Nessuna' }}</span>
+              }
+            </div>
+          </section>
+
+          <!-- Features & Traits -->
+          <section class="features-section">
+            <h3>⚡ Tratti & Abilità Speciali</h3>
+            <div class="features-list">
+              @for (feature of s.features; track $index) {
+                <div class="feature-tag">{{ feature }}</div>
+              }
+            </div>
+            <div class="traits-list">
+              @for (trait of s.traits; track $index) {
+                <div class="trait-tag">{{ trait }}</div>
+              }
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB: COMBAT -->
+  @if (activeTab === 'combat') {
+    <div class="tab-content">
+      <div class="combat-grid">
         <!-- Combat Stats -->
-        <section class="combat-stats">
-          <div class="stat-row">
-            <label>AC</label>
-            <input type="number" [(ngModel)]="s.armorClass" [disabled]="!editMode()" class="stat-input">
-          </div>
-          <div class="stat-row">
-            <label>Initiative</label>
-            <input type="number" [(ngModel)]="s.initiative" [disabled]="!editMode()" class="stat-input">
-          </div>
-          <div class="stat-row">
-            <label>Speed</label>
-            <input type="number" [(ngModel)]="s.speed" [disabled]="!editMode()" class="stat-input">
-          </div>
-          <div class="stat-row">
-            <label>Prof Bonus</label>
-            <input type="number" [(ngModel)]="s.proficiencyBonus" [disabled]="!editMode()" class="stat-input">
+        <section class="combat-stats-section">
+          <h3>⚔️ Statistiche di Combattimento</h3>
+          <div class="combat-stats-grid">
+            <div class="combat-stat-box">
+              <label>Classe Armatura</label>
+              <input type="number" [(ngModel)]="s.armorClass" [disabled]="!editMode()" class="stat-input-lg">
+            </div>
+            <div class="combat-stat-box">
+              <label>Iniziativa</label>
+              <span class="stat-display">{{ formatModifier(s.initiative) }}</span>
+            </div>
+            <div class="combat-stat-box">
+              <label>Velocità</label>
+              <input type="number" [(ngModel)]="s.speed" [disabled]="!editMode()" class="stat-input-lg">
+              <span class="stat-unit">ft</span>
+            </div>
+            <div class="combat-stat-box">
+              <label>Bonus Competenza</label>
+              <span class="stat-display">+{{ s.proficiencyBonus }}</span>
+            </div>
           </div>
         </section>
 
-        <!-- HP -->
+        <!-- HP Section -->
         <section class="hp-section">
-          <h3>Hit Points</h3>
+          <h3>❤️ Punti Ferita</h3>
           <div class="hp-display">
-            <div class="hp-current">
-              <label>Current</label>
-              <span class="hp-value">{{ s.currentHP }}</span>
+            <div class="hp-box current">
+              <label>Attuali</label>
+              <span class="hp-value" [class.low]="s.currentHP < s.maxHP * 0.25" [class.mid]="s.currentHP >= s.maxHP * 0.25 && s.currentHP < s.maxHP * 0.5">
+                {{ s.currentHP }}
+              </span>
             </div>
             <span class="hp-separator">/</span>
-            <div class="hp-max">
-              <label>Max</label>
-              <span class="hp-value">{{ s.maxHP }}</span>
+            <div class="hp-box max">
+              <label>Massimi</label>
+              @if (editMode()) {
+                <input type="number" [(ngModel)]="s.maxHP" class="hp-input">
+              } @else {
+                <span class="hp-value">{{ s.maxHP }}</span>
+              }
+            </div>
+            <div class="hp-box temp">
+              <label>Temporanei</label>
+              <input type="number" [(ngModel)]="s.temporaryHP" class="hp-input-sm">
             </div>
           </div>
-          
-          @if (s.temporaryHP > 0) {
-            <div class="temp-hp">
-              Temp HP: <span>{{ s.temporaryHP }}</span>
-            </div>
-          }
 
           @if (!editMode()) {
             <div class="hp-actions">
-              <button (click)="restoreHP(1)" class="hp-btn">+1</button>
-              <button (click)="restoreHP(5)" class="hp-btn">+5</button>
+              <button (click)="restoreHP(1)" class="hp-btn heal">+1</button>
+              <button (click)="restoreHP(5)" class="hp-btn heal">+5</button>
+              <button (click)="restoreHP(10)" class="hp-btn heal">+10</button>
               <button (click)="takeDamage(1)" class="hp-btn damage">-1</button>
               <button (click)="takeDamage(5)" class="hp-btn damage">-5</button>
-            </div>
-            <button (click)="longRest()" class="btn-rest">🌙 Long Rest</button>
-          } @else {
-            <input type="number" [(ngModel)]="s.maxHP" class="hp-edit">
-          }
-        </section>
-
-        <!-- Skills -->
-        <section class="skills-section">
-          <h3>Skills</h3>
-          @for (skill of allSkills; track skill.name) {
-            <div class="skill-row" [class.proficient]="s.skills[skill.name] > 0" (click)="toggleSkillProficiency(skill.name)">
-              <span class="skill-prof">
-                @if (s.skills[skill.name] === 2) { ⭐ }
-                @else if (s.skills[skill.name] === 1) { ✓ }
-                @else { ○ }
-              </span>
-              <span class="skill-name">{{ skill.name }}</span>
-              <span class="skill-bonus">{{ formatModifier(getSkillBonus(skill.name)) }}</span>
+              <button (click)="takeDamage(10)" class="hp-btn damage">-10</button>
             </div>
           }
         </section>
-      </div>
 
-      <!-- Right Column: Details -->
-      <div class="right-column">
-        <!-- Basic Info -->
-        @if (editMode()) {
-          <section class="basic-info">
-            <div class="info-row">
-              <label>Race</label>
-              <input type="text" [(ngModel)]="s.race" class="info-input">
+        <!-- Hit Dice -->
+        <section class="hit-dice-section">
+          <h3>🎲 Dadi Vita</h3>
+          <div class="hit-dice-display">
+            <span class="dice-type">{{ s.hitDice }}</span>
+            <span class="dice-remaining">{{ s.hitDiceRemaining || 0 }} / {{ getTotalLevel() }}</span>
+          </div>
+          @if (!editMode()) {
+            <button (click)="useHitDie()" class="btn-use-die" [disabled]="!s.hitDiceRemaining">
+              🎲 Usa Dado Vita
+            </button>
+          }
+        </section>
+
+        <!-- Death Saves -->
+        <section class="death-saves-section">
+          <h3>💀 Tiri Salvezza contro Morte</h3>
+          <div class="death-saves">
+            <div class="saves-row successes">
+              <label>Successi</label>
+              <div class="save-circles">
+                @for (i of [0, 1, 2]; track i) {
+                  <span class="save-circle" 
+                        [class.filled]="(s.deathSaves?.successes || 0) > i"
+                        (click)="addDeathSaveSuccess()">●</span>
+                }
+              </div>
             </div>
-            <div class="info-row">
-              <label>Class</label>
-              <input type="text" [(ngModel)]="s.class" class="info-input">
+            <div class="saves-row failures">
+              <label>Fallimenti</label>
+              <div class="save-circles">
+                @for (i of [0, 1, 2]; track i) {
+                  <span class="save-circle" 
+                        [class.filled]="(s.deathSaves?.failures || 0) > i"
+                        (click)="addDeathSaveFailure()">●</span>
+                }
+              </div>
             </div>
-            <div class="info-row">
-              <label>Level</label>
-              <input type="number" [(ngModel)]="s.level" class="info-input">
-            </div>
-            <div class="info-row">
-              <label>Background</label>
-              <input type="text" [(ngModel)]="s.background" class="info-input">
-            </div>
-          </section>
-        }
+            <button (click)="resetDeathSaves()" class="btn-reset-saves">Reset</button>
+          </div>
+        </section>
+
+        <!-- Rest Actions -->
+        <section class="rest-section">
+          <h3>🌙 Riposo</h3>
+          <div class="rest-buttons">
+            <button (click)="shortRest()" class="btn-rest short">
+              ☀️ Riposo Breve
+            </button>
+            <button (click)="longRest()" class="btn-rest long">
+              🌙 Riposo Lungo
+            </button>
+          </div>
+        </section>
 
         <!-- Weapons -->
         <section class="weapons-section">
           <div class="section-header">
-            <h3>⚔️ Weapons</h3>
+            <h3>⚔️ Armi</h3>
             @if (editMode()) {
               <button (click)="addWeapon()" class="btn-add">+</button>
             }
@@ -175,16 +392,21 @@
           @for (weapon of s.weapons; track $index) {
             <div class="weapon-card">
               @if (editMode()) {
-                <input type="text" [(ngModel)]="weapon.name" class="weapon-input" placeholder="Name">
-                <input type="text" [(ngModel)]="weapon.damage" class="weapon-input-sm" placeholder="1d8">
-                <input type="text" [(ngModel)]="weapon.damageType" class="weapon-input-sm" placeholder="Type">
-                <input type="number" [(ngModel)]="weapon.attackBonus" class="weapon-input-sm" placeholder="+0">
-                <button (click)="removeWeapon($index)" class="btn-remove">🗑️</button>
+                <div class="weapon-edit-grid">
+                  <input type="text" [(ngModel)]="weapon.name" class="weapon-input" placeholder="Nome">
+                  <input type="text" [(ngModel)]="weapon.damage" class="weapon-input-sm" placeholder="1d8">
+                  <input type="text" [(ngModel)]="weapon.damageType" class="weapon-input-sm" placeholder="Tipo">
+                  <input type="number" [(ngModel)]="weapon.attackBonus" class="weapon-input-sm" placeholder="+0">
+                  <input type="text" [(ngModel)]="weapon.properties" class="weapon-input" placeholder="Proprietà">
+                  <button (click)="removeWeapon($index)" class="btn-remove">🗑️</button>
+                </div>
               } @else {
                 <div class="weapon-display">
                   <h4>{{ weapon.name }}</h4>
-                  <p>Damage: {{ weapon.damage }} ({{ weapon.damageType }})</p>
-                  <p>Attack: {{ formatModifier(weapon.attackBonus) }}</p>
+                  <div class="weapon-stats">
+                    <span class="attack">Attacco: {{ formatModifier(weapon.attackBonus) }}</span>
+                    <span class="damage">Danno: {{ weapon.damage }} {{ weapon.damageType }}</span>
+                  </div>
                   @if (weapon.properties) {
                     <p class="weapon-properties">{{ weapon.properties }}</p>
                   }
@@ -194,60 +416,451 @@
           }
         </section>
 
-        <!-- Spells -->
-        @if (s.spells.length > 0) {
-          <section class="spells-section">
-            <div class="section-header">
-              <h3>✨ Spells</h3>
+        <!-- Armor -->
+        <section class="armor-section">
+          <h3>🛡️ Armatura & Scudo</h3>
+          <div class="armor-display">
+            <div class="armor-item">
+              <label>Armatura:</label>
               @if (editMode()) {
-                <button (click)="addSpell()" class="btn-add">+</button>
+                <input type="text" [(ngModel)]="s.armor" placeholder="Leather Armor">
+              } @else {
+                <span>{{ s.armor || 'Nessuna' }}</span>
               }
             </div>
+            <div class="armor-item">
+              <label>Scudo:</label>
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="s.shield" placeholder="Shield (+2 AC)">
+              } @else {
+                <span>{{ s.shield || 'Nessuno' }}</span>
+              }
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
 
-            @if (s.spellSlots) {
-              <div class="spell-slots">
-                @for (level of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track level) {
-                  @if (s.spellSlots![level] && s.spellSlots![level].max > 0) {
-                    <div class="slot-row">
-                      <span>Lv {{ level }}:</span>
-                      <span>{{ s.spellSlots![level].current }} / {{ s.spellSlots![level].max }}</span>
+  <!-- TAB: SPELLS -->
+  @if (activeTab === 'spells') {
+    <div class="tab-content">
+      <div class="spells-grid">
+        <!-- Spellcasting Info -->
+        <section class="spellcasting-info">
+          <h3>✨ Capacità Magica</h3>
+          <div class="spellcasting-stats">
+            <div class="spell-stat">
+              <label>Caratteristica</label>
+              @if (editMode()) {
+                <select [(ngModel)]="s.spellcastingAbility">
+                  <option value="">Nessuna</option>
+                  <option value="Intelligence">Intelligenza</option>
+                  <option value="Wisdom">Saggezza</option>
+                  <option value="Charisma">Carisma</option>
+                </select>
+              } @else {
+                <span>{{ s.spellcastingAbility || '-' }}</span>
+              }
+            </div>
+            <div class="spell-stat">
+              <label>CD Salvezza</label>
+              <span class="stat-value">{{ s.spellSaveDC || '-' }}</span>
+            </div>
+            <div class="spell-stat">
+              <label>Bonus Attacco</label>
+              <span class="stat-value">{{ s.spellAttackBonus ? formatModifier(s.spellAttackBonus) : '-' }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Spell Slots -->
+        @if (s.spellSlots) {
+          <section class="spell-slots-section">
+            <h3>🔮 Slot Incantesimo</h3>
+            <div class="slots-grid">
+              @for (level of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track level) {
+                @if (s.spellSlots![level] && s.spellSlots![level].max > 0) {
+                  <div class="slot-box">
+                    <label>Livello {{ level }}</label>
+                    <div class="slot-circles">
+                      @for (i of [].constructor(s.spellSlots![level].max); track $index) {
+                        <span class="slot-circle" 
+                              [class.used]="$index >= s.spellSlots![level].current"
+                              (click)="useSpellSlot(level)">●</span>
+                      }
                     </div>
-                  }
+                    <span class="slot-count">{{ s.spellSlots![level].current }} / {{ s.spellSlots![level].max }}</span>
+                  </div>
                 }
-              </div>
-            }
-
-            @for (spell of s.spells; track $index) {
-              <div class="spell-card">
-                @if (editMode()) {
-                  <input type="text" [(ngModel)]="spell.name" placeholder="Spell Name">
-                  <input type="number" [(ngModel)]="spell.level" placeholder="Level">
-                  <button (click)="removeSpell($index)" class="btn-remove">🗑️</button>
-                } @else {
-                  <h4>{{ spell.name }} @if (spell.level > 0) { (Lv {{ spell.level }}) } @else { (Cantrip) }</h4>
-                  <p class="spell-meta">{{ spell.school }} • {{ spell.castingTime }} • {{ spell.range }}</p>
-                  <p>{{ spell.description }}</p>
-                }
-              </div>
-            }
+              }
+            </div>
           </section>
         }
 
-        <!-- Features & Traits -->
-        <section class="features-section">
-          <h3>🎯 Features & Traits</h3>
-          @for (feature of s.features; track $index) {
-            <div class="feature-tag">{{ feature }}</div>
+        <!-- Pact Magic (Warlock) -->
+        @if (s.pactMagic) {
+          <section class="pact-magic-section">
+            <h3>🔥 Magia del Patto</h3>
+            <div class="pact-display">
+              <span class="pact-level">Slot Livello {{ s.pactMagic.slotLevel }}</span>
+              <div class="pact-slots">
+                @for (i of [].constructor(s.pactMagic.slotsMax); track $index) {
+                  <span class="pact-circle" 
+                        [class.used]="$index >= s.pactMagic.slotsCurrent"
+                        (click)="usePactSlot()">●</span>
+                }
+              </div>
+              <span class="pact-count">{{ s.pactMagic.slotsCurrent }} / {{ s.pactMagic.slotsMax }}</span>
+              <button (click)="restorePactSlots()" class="btn-restore-pact">Ripristina (Short Rest)</button>
+            </div>
+          </section>
+        }
+
+        <!-- Spells List -->
+        <section class="spells-list-section">
+          <div class="section-header">
+            <h3>📖 Incantesimi</h3>
+            @if (editMode()) {
+              <button (click)="addSpell()" class="btn-add">+</button>
+            }
+          </div>
+
+          <!-- Cantrips -->
+          @if (hasSpellsOfLevel(0)) {
+            <div class="spell-level-group">
+              <h4>Trucchetti</h4>
+              @for (spell of getSpellsByLevel(0); track $index) {
+                <div class="spell-card">
+                  @if (editMode()) {
+                    <input type="text" [(ngModel)]="spell.name" placeholder="Nome">
+                    <input type="text" [(ngModel)]="spell.school" placeholder="Scuola">
+                    <button (click)="removeSpellByName(spell.name)" class="btn-remove">🗑️</button>
+                  } @else {
+                    <h5>{{ spell.name }}</h5>
+                    <p class="spell-meta">{{ spell.school }} • {{ spell.castingTime }} • {{ spell.range }}</p>
+                    <p class="spell-desc">{{ spell.description }}</p>
+                  }
+                </div>
+              }
+            </div>
           }
-          @for (trait of s.traits; track $index) {
-            <div class="trait-tag">{{ trait }}</div>
+
+          <!-- Leveled Spells -->
+          @for (lvl of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track lvl) {
+            @if (hasSpellsOfLevel(lvl)) {
+              <div class="spell-level-group">
+                <h4>Livello {{ lvl }}</h4>
+                @for (spell of getSpellsByLevel(lvl); track $index) {
+                  <div class="spell-card" [class.prepared]="spell.prepared">
+                    @if (editMode()) {
+                      <input type="text" [(ngModel)]="spell.name" placeholder="Nome">
+                      <input type="number" [(ngModel)]="spell.level" placeholder="Livello">
+                      <input type="text" [(ngModel)]="spell.school" placeholder="Scuola">
+                      <label><input type="checkbox" [(ngModel)]="spell.prepared"> Preparato</label>
+                      <button (click)="removeSpellByName(spell.name)" class="btn-remove">🗑️</button>
+                    } @else {
+                      <div class="spell-header">
+                        <h5>{{ spell.name }}</h5>
+                        @if (spell.prepared) {
+                          <span class="prepared-badge">Preparato</span>
+                        }
+                      </div>
+                      <p class="spell-meta">{{ spell.school }} • {{ spell.castingTime }} • {{ spell.range }}</p>
+                      <p class="spell-components">{{ spell.components }} • {{ spell.duration }}</p>
+                      <p class="spell-desc">{{ spell.description }}</p>
+                    }
+                  </div>
+                }
+              </div>
+            }
           }
         </section>
       </div>
     </div>
-  </div>
+  }
+
+  <!-- TAB: INVENTORY -->
+  @if (activeTab === 'inventory') {
+    <div class="tab-content">
+      <div class="inventory-grid">
+        <!-- Currency -->
+        <section class="currency-section">
+          <h3>💰 Denaro</h3>
+          <div class="currency-grid">
+            <div class="currency-box cp">
+              <label>CP</label>
+              <input type="number" [(ngModel)]="s.currency!.cp" [disabled]="!editMode()">
+            </div>
+            <div class="currency-box sp">
+              <label>SP</label>
+              <input type="number" [(ngModel)]="s.currency!.sp" [disabled]="!editMode()">
+            </div>
+            <div class="currency-box ep">
+              <label>EP</label>
+              <input type="number" [(ngModel)]="s.currency!.ep" [disabled]="!editMode()">
+            </div>
+            <div class="currency-box gp">
+              <label>GP</label>
+              <input type="number" [(ngModel)]="s.currency!.gp" [disabled]="!editMode()">
+            </div>
+            <div class="currency-box pp">
+              <label>PP</label>
+              <input type="number" [(ngModel)]="s.currency!.pp" [disabled]="!editMode()">
+            </div>
+          </div>
+          <p class="total-gold">Totale: {{ getTotalGold() | number:'1.2-2' }} GP</p>
+        </section>
+
+        <!-- Carrying Capacity -->
+        <section class="capacity-section">
+          <h3>🏋️ Capacità di Carico</h3>
+          <div class="capacity-bar">
+            <div class="capacity-fill" [style.width.%]="(getTotalWeight() / getCarryingCapacity()) * 100"></div>
+          </div>
+          <p class="capacity-text">{{ getTotalWeight() | number:'1.1-1' }} / {{ getCarryingCapacity() }} lb</p>
+        </section>
+
+        <!-- Equipment (from character) -->
+        <section class="equipment-section">
+          <h3>⚙️ Equipaggiamento</h3>
+          @for (item of s.equipment; track $index) {
+            <div class="equipment-item">{{ item }}</div>
+          }
+        </section>
+
+        <!-- Inventory Items -->
+        <section class="inventory-items-section">
+          <div class="section-header">
+            <h3>🎒 Inventario</h3>
+            @if (editMode()) {
+              <button (click)="addInventoryItem()" class="btn-add">+</button>
+            }
+          </div>
+
+          @if (s.inventory && s.inventory.length > 0) {
+            <div class="inventory-list">
+              @for (item of s.inventory; track $index) {
+                <div class="inventory-item" [class.equipped]="item.equipped">
+                  @if (editMode()) {
+                    <input type="text" [(ngModel)]="item.name" placeholder="Nome oggetto">
+                    <input type="number" [(ngModel)]="item.quantity" placeholder="Qty" class="qty-input">
+                    <input type="number" [(ngModel)]="item.weight" placeholder="Peso" class="weight-input">
+                    <label class="equipped-check">
+                      <input type="checkbox" [(ngModel)]="item.equipped"> Eq.
+                    </label>
+                    <button (click)="removeInventoryItem($index)" class="btn-remove">🗑️</button>
+                  } @else {
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-qty">x{{ item.quantity }}</span>
+                    @if (item.weight) {
+                      <span class="item-weight">{{ item.weight * item.quantity }} lb</span>
+                    }
+                    @if (item.equipped) {
+                      <span class="equipped-badge">⚔️</span>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-inventory">Inventario vuoto</p>
+          }
+        </section>
+      </div>
+    </div>
+  }
+
+  <!-- TAB: BIO (Background, Personality, Appearance) -->
+  @if (activeTab === 'bio') {
+    <div class="tab-content">
+      <div class="bio-grid">
+        <!-- Basic Info Edit -->
+        @if (editMode()) {
+          <section class="basic-info-section">
+            <h3>📝 Informazioni Base</h3>
+            <div class="info-grid">
+              <div class="info-row">
+                <label>Nome Personaggio</label>
+                <input type="text" [(ngModel)]="s.characterName">
+              </div>
+              <div class="info-row">
+                <label>Nome Giocatore</label>
+                <input type="text" [(ngModel)]="s.playerName">
+              </div>
+              <div class="info-row">
+                <label>Razza</label>
+                <input type="text" [(ngModel)]="s.race">
+              </div>
+              <div class="info-row">
+                <label>Sottorazza</label>
+                <input type="text" [(ngModel)]="s.subrace">
+              </div>
+              <div class="info-row">
+                <label>Background</label>
+                <input type="text" [(ngModel)]="s.background">
+              </div>
+              <div class="info-row">
+                <label>Allineamento</label>
+                <select [(ngModel)]="s.alignment">
+                  <option>Lawful Good</option>
+                  <option>Neutral Good</option>
+                  <option>Chaotic Good</option>
+                  <option>Lawful Neutral</option>
+                  <option>True Neutral</option>
+                  <option>Chaotic Neutral</option>
+                  <option>Lawful Evil</option>
+                  <option>Neutral Evil</option>
+                  <option>Chaotic Evil</option>
+                </select>
+              </div>
+              <div class="info-row">
+                <label>Esperienza</label>
+                <input type="number" [(ngModel)]="s.experience">
+              </div>
+              <div class="info-row full-width">
+                <label>Immagine Personaggio (URL)</label>
+                <input type="text" [(ngModel)]="s.characterImage" placeholder="./assets/img/character.png">
+              </div>
+            </div>
+          </section>
+        }
+
+        <!-- Personality -->
+        <section class="personality-section">
+          <h3>🎭 Personalità</h3>
+          <div class="personality-box">
+            <label>Tratti della Personalità</label>
+            @if (editMode()) {
+              <textarea [(ngModel)]="s.personalityTraits" rows="3"></textarea>
+            } @else {
+              <p>{{ s.personalityTraits || 'Non specificato' }}</p>
+            }
+          </div>
+          <div class="personality-box">
+            <label>Ideali</label>
+            @if (editMode()) {
+              <textarea [(ngModel)]="s.ideals" rows="2"></textarea>
+            } @else {
+              <p>{{ s.ideals || 'Non specificato' }}</p>
+            }
+          </div>
+          <div class="personality-box">
+            <label>Legami</label>
+            @if (editMode()) {
+              <textarea [(ngModel)]="s.bonds" rows="2"></textarea>
+            } @else {
+              <p>{{ s.bonds || 'Non specificato' }}</p>
+            }
+          </div>
+          <div class="personality-box">
+            <label>Difetti</label>
+            @if (editMode()) {
+              <textarea [(ngModel)]="s.flaws" rows="2"></textarea>
+            } @else {
+              <p>{{ s.flaws || 'Non specificato' }}</p>
+            }
+          </div>
+        </section>
+
+        <!-- Appearance -->
+        <section class="appearance-section">
+          <h3>👤 Aspetto</h3>
+          <div class="appearance-grid">
+            <div class="appearance-item">
+              <label>Età</label>
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="s.age">
+              } @else {
+                <span>{{ s.age || '-' }}</span>
+              }
+            </div>
+            <div class="appearance-item">
+              <label>Altezza</label>
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="s.height">
+              } @else {
+                <span>{{ s.height || '-' }}</span>
+              }
+            </div>
+            <div class="appearance-item">
+              <label>Peso</label>
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="s.weight">
+              } @else {
+                <span>{{ s.weight || '-' }}</span>
+              }
+            </div>
+            <div class="appearance-item">
+              <label>Occhi</label>
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="s.eyes">
+              } @else {
+                <span>{{ s.eyes || '-' }}</span>
+              }
+            </div>
+            <div class="appearance-item">
+              <label>Pelle</label>
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="s.skin">
+              } @else {
+                <span>{{ s.skin || '-' }}</span>
+              }
+            </div>
+            <div class="appearance-item">
+              <label>Capelli</label>
+              @if (editMode()) {
+                <input type="text" [(ngModel)]="s.hair">
+              } @else {
+                <span>{{ s.hair || '-' }}</span>
+              }
+            </div>
+          </div>
+          <div class="appearance-description">
+            <label>Descrizione</label>
+            @if (editMode()) {
+              <textarea [(ngModel)]="s.appearance" rows="3"></textarea>
+            } @else {
+              <p>{{ s.appearance || 'Non specificato' }}</p>
+            }
+          </div>
+        </section>
+
+        <!-- Backstory -->
+        <section class="backstory-section">
+          <h3>📖 Storia</h3>
+          @if (editMode()) {
+            <textarea [(ngModel)]="s.backstory" rows="8" placeholder="La storia del tuo personaggio..."></textarea>
+          } @else {
+            <p class="backstory-text">{{ s.backstory || 'Nessuna storia scritta' }}</p>
+          }
+        </section>
+
+        <!-- Allies & Notes -->
+        <section class="notes-section">
+          <div class="notes-box">
+            <h3>🤝 Alleati & Organizzazioni</h3>
+            @if (editMode()) {
+              <textarea [(ngModel)]="s.alliesAndOrganizations" rows="4"></textarea>
+            } @else {
+              <p>{{ s.alliesAndOrganizations || 'Nessuno' }}</p>
+            }
+          </div>
+          <div class="notes-box">
+            <h3>📝 Note Aggiuntive</h3>
+            @if (editMode()) {
+              <textarea [(ngModel)]="s.additionalNotes" rows="4"></textarea>
+            } @else {
+              <p>{{ s.additionalNotes || 'Nessuna nota' }}</p>
+            }
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+</div>
 } @else {
-  <div class="loading">
-    <p>Caricamento scheda personaggio...</p>
-  </div>
+<div class="loading">
+  <p>Caricamento scheda personaggio...</p>
+</div>
 }

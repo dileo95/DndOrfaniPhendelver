@@ -1,427 +1,110 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, signal, PLATFORM_ID, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, signal, computed, PLATFORM_ID, Inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DatabaseService, CharacterSheet as Sheet } from '../../services/database.service';
+import { DatabaseService, CharacterSheet as Sheet, Weapon, Spell } from '../../services/database.service';
 
 // Phaser will be imported dynamically only in browser
 let Phaser: any;
-let CombatScene: any;
 
-// Factory function to create CombatScene class after Phaser is loaded
-function createCombatScene(PhaserLib: any) {
-  return class extends PhaserLib.Scene {
-    private playerSprite!: any;
-    private enemySprite!: any;
-    private playerHPBar!: any;
-    private enemyHPBar!: any;
-    private logText!: any;
-    private turnText!: any;
-    private bgMusic!: any;
-  
-  playerHP = 0;
-  playerMaxHP = 0;
-  playerAC = 0;
-  playerAttackBonus = 0;
-  playerDamage = '1d8+3';
-  playerName = 'Hero';
-  character = 'asriel';
-  
-  enemyHP = 0;
-  enemyMaxHP = 0;
-  enemyAC = 0;
-  enemyAttackBonus = 0;
-  enemyDamage = '1d8+2';
-  enemyName = 'Goblin';
-  
-  combatLog: string[] = [];
-  isPlayerTurn = true;
-  gameOver = false;
-
-  constructor() {
-    super({ key: 'CombatScene' });
-  }
-
-  init(data: any) {
-    this.playerHP = data.playerHP || 30;
-    this.playerMaxHP = data.playerMaxHP || 30;
-    this.playerAC = data.playerAC || 15;
-    this.playerAttackBonus = data.playerAttackBonus || 5;
-    this.playerDamage = data.playerDamage || '1d8+3';
-    this.playerName = data.playerName || 'Hero';
-    this.character = data.character || 'asriel';
-    
-    this.enemyMaxHP = data.enemyMaxHP || 20;
-    this.enemyHP = this.enemyMaxHP;
-    this.enemyAC = data.enemyAC || 13;
-    this.enemyName = data.enemyName || 'Goblin';
-  }
-
-  preload() {
-    this['load'].image('fightScene', './assets/img/fight_scene1.png');
-    this['load'].audio('bgMusic', './assets/sound/combat-music.WAV');
-    
-    // Load character spritesheets dynamically (64x64 per frame, row 4 for SE direction)
-    const charPath = `./assets/spritesheet/${this.character}_animation/standard`;
-    this['load'].spritesheet('player_idle', `${charPath}/combat_idle.png`, {
-      frameWidth: 64,
-      frameHeight: 64
-    });
-    this['load'].spritesheet('player_attack', `${charPath}/halfslash.png`, {
-      frameWidth: 64,
-      frameHeight: 64
-    });
-    this['load'].spritesheet('player_spell', `${charPath}/spellcast.png`, {
-      frameWidth: 64,
-      frameHeight: 64
-    });
-    this['load'].spritesheet('player_hurt', `${charPath}/hurt.png`, {
-      frameWidth: 64,
-      frameHeight: 64
-    });
-  }
-
-  create() {
-    const { width, height } = this['cameras'].main;
-
-    // Add background image
-    const bg = this['add'].image(width / 2, height / 2, 'fightScene');
-    bg.setDisplaySize(width, height);
-    bg.setDepth(0);
-
-    // Add background music with loop
-    this.bgMusic = this['sound'].add('bgMusic', {
-      volume: 0.3,
-      loop: true
-    });
-    this.bgMusic.play();
-
-    // Create player sprite with dynamic character
-    this.playerSprite = this['add'].sprite(200, height / 2, 'player_idle');
-    this.playerSprite.setScale(2); // Scale up for visibility
-
-    // Create animations - Row 4 for all spritesheets
-    // Idle: 2 cols (128px), row 4 = frames 6-7
-    this['anims'].create({
-      key: 'player_idle',
-      frames: this['anims'].generateFrameNumbers('player_idle', { start: 6, end: 7 }),
-      frameRate: 6,
-      repeat: -1
-    });
-
-    // Attack (halfslash): 6 cols (384px), row 4 = frames 18-23
-    this['anims'].create({
-      key: 'player_attack',
-      frames: this['anims'].generateFrameNumbers('player_attack', { start: 18, end: 23 }),
-      frameRate: 12,
-      repeat: 0
-    });
-
-    // Spell: 7 cols (448px), row 4 = frames 21-27
-    this['anims'].create({
-      key: 'player_spell',
-      frames: this['anims'].generateFrameNumbers('player_spell', { start: 21, end: 27 }),
-      frameRate: 10,
-      repeat: 0
-    });
-
-    // Hurt: 6 cols × 1 row (384×64px), frames 0-5
-    this['anims'].create({
-      key: 'player_hurt',
-      frames: this['anims'].generateFrameNumbers('player_hurt', { start: 0, end: 5 }),
-      frameRate: 10,
-      repeat: 0
-    });
-
-    this.playerSprite.play('player_idle');
-    this.playerSprite.setDepth(10);
-
-    this['add'].text(200, height / 2 + 80, this.playerName, { fontSize: '16px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 5, y: 2 } }).setOrigin(0.5).setDepth(10);
-
-    // Enemy sprite
-    this.enemySprite = this['add'].rectangle(width - 150, height / 2, 60, 100, 0xff4444);
-    this.enemySprite.setDepth(10);
-    this['add'].text(width - 150, height / 2 + 70, this.enemyName, { fontSize: '16px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 5, y: 2 } }).setOrigin(0.5).setDepth(10);
-
-    this.playerHPBar = this['add'].graphics();
-    this.playerHPBar.setDepth(10);
-    this.enemyHPBar = this['add'].graphics();
-    this.enemyHPBar.setDepth(10);
-    this.updateHPBars();
-
-    this.turnText = this['add'].text(width / 2, 30, 'YOUR TURN', {
-      fontSize: '24px',
-      color: '#d4af37',
-      fontStyle: 'bold'
-    }).setOrigin(0.5).setDepth(20);
-
-    this.logText = this['add'].text(20, height - 150, '', {
-      fontSize: '14px',
-      color: '#ffffff',
-      wordWrap: { width: width - 40 }
-    }).setDepth(20);
-
-    this.createButtons();
-
-    this.addToLog('Combat started!');
-  }
-
-  createButtons() {
-    const { width, height } = this['cameras'].main;
-    const buttonY = height - 40;
-
-    const attackBtn = this['add'].rectangle(width / 2 - 120, buttonY, 100, 40, 0xd4af37)
-      .setInteractive()
-      .on('pointerdown', () => this.playerAttack())
-      .setDepth(10);
-    
-    this['add'].text(width / 2 - 120, buttonY, 'ATTACK', { fontSize: '16px', color: '#000000' }).setOrigin(0.5).setDepth(10);
-
-    const spellBtn = this['add'].rectangle(width / 2, buttonY, 100, 40, 0x9c27b0)
-      .setInteractive()
-      .on('pointerdown', () => this.playerSpell())
-      .setDepth(10);
-    
-    this['add'].text(width / 2, buttonY, 'SPELL', { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5).setDepth(10);
-
-    const defendBtn = this['add'].rectangle(width / 2 + 120, buttonY, 100, 40, 0x2196f3)
-      .setInteractive()
-      .on('pointerdown', () => this.playerDefend())
-      .setDepth(10);
-    
-    this['add'].text(width / 2 + 120, buttonY, 'DEFEND', { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5).setDepth(10);
-  }
-
-  playerAttack() {
-    if (!this.isPlayerTurn || this.gameOver) return;
-
-    const attackRoll = Phaser.Math.Between(1, 20) + this.playerAttackBonus;
-    this.addToLog(`${this.playerName} rolled ${attackRoll} to hit (AC ${this.enemyAC})`);
-
-    if (attackRoll >= this.enemyAC) {
-      const damage = this.rollDamage(this.playerDamage);
-      this.enemyHP -= damage;
-      this.addToLog(`HIT! Dealt ${damage} damage!`);
-      
-      // Play attack animation
-      this.playerSprite.play('player_attack');
-      this.playerSprite.once('animationcomplete', () => {
-        if (!this.gameOver) {
-          this.playerSprite.play('player_idle');
-        }
-      });
-      
-      this['tweens'].add({
-        targets: this.enemySprite,
-        x: this.enemySprite.x + 20,
-        duration: 100,
-        yoyo: true
-      });
-      
-      if (this.enemyHP <= 0) {
-        this.enemyHP = 0;
-        this.victory();
-        return;
-      }
-    } else {
-      this.addToLog('MISS!');
-    }
-
-    this.updateHPBars();
-    
-    // Wait for animation to complete before ending turn
-    this['time'].delayedCall(500, () => {
-      if (!this.gameOver) {
-        this.endPlayerTurn();
-      }
-    });
-  }
-
-  playerSpell() {
-    if (!this.isPlayerTurn || this.gameOver) return;
-
-    const damage = Phaser.Math.Between(8, 12);
-    this.enemyHP -= damage;
-    this.addToLog(`Cast Eldritch Blast! Dealt ${damage} force damage!`);
-
-    // Play spell animation
-    this.playerSprite.play('player_spell');
-    this.playerSprite.once('animationcomplete', () => {
-      if (!this.gameOver) {
-        this.playerSprite.play('player_idle');
-      }
-    });
-
-    this['tweens'].add({
-      targets: this.enemySprite,
-      alpha: 0.5,
-      duration: 200,
-      yoyo: true
-    });
-
-    if (this.enemyHP <= 0) {
-      this.enemyHP = 0;
-      this.victory();
-      return;
-    }
-
-    this.updateHPBars();
-    
-    // Wait for animation to complete before ending turn
-    this['time'].delayedCall(700, () => {
-      if (!this.gameOver) {
-        this.endPlayerTurn();
-      }
-    });
-  }
-
-  playerDefend() {
-    if (!this.isPlayerTurn || this.gameOver) return;
-
-    this.addToLog('You take a defensive stance (+2 AC until next turn)');
-    this.playerAC += 2;
-    
-    this.endPlayerTurn();
-    
-    this['time'].delayedCall(2000, () => {
-      this.playerAC -= 2;
-    });
-  }
-
-  endPlayerTurn() {
-    this.isPlayerTurn = false;
-    this.turnText.setText('ENEMY TURN');
-    
-    this['time'].delayedCall(1500, () => {
-      this.enemyAttack();
-    });
-  }
-
-  enemyAttack() {
-    if (this.gameOver) return;
-
-    const attackRoll = Phaser.Math.Between(1, 20) + this.enemyAttackBonus;
-    this.addToLog(`${this.enemyName} rolled ${attackRoll} to hit (AC ${this.playerAC})`);
-
-    if (attackRoll >= this.playerAC) {
-      const damage = this.rollDamage(this.enemyDamage);
-      this.playerHP -= damage;
-      this.addToLog(`${this.enemyName} HIT! You took ${damage} damage!`);
-      
-      // Play hurt animation
-      this.playerSprite.play('player_hurt');
-      this.playerSprite.once('animationcomplete', () => {
-        if (!this.gameOver) {
-          this.playerSprite.play('player_idle');
-        }
-      });
-      
-      this['tweens'].add({
-        targets: this.playerSprite,
-        x: this.playerSprite.x - 20,
-        duration: 100,
-        yoyo: true
-      });
-
-      if (this.playerHP <= 0) {
-        this.playerHP = 0;
-        this.defeat();
-        return;
-      }
-    } else {
-      this.addToLog(`${this.enemyName} MISSED!`);
-    }
-
-    this.updateHPBars();
-    
-    this['time'].delayedCall(1500, () => {
-      if (!this.gameOver) {
-        this.isPlayerTurn = true;
-        this.turnText.setText('YOUR TURN');
-      }
-    });
-  }
-
-  rollDamage(diceString: string): number {
-    const match = diceString.match(/(\d+)d(\d+)([+-]\d+)?/);
-    if (!match) return 1;
-
-    const numDice = parseInt(match[1]);
-    const diceSize = parseInt(match[2]);
-    const modifier = match[3] ? parseInt(match[3]) : 0;
-
-    let total = modifier;
-    for (let i = 0; i < numDice; i++) {
-      total += Phaser.Math.Between(1, diceSize);
-    }
-
-    return Math.max(1, total);
-  }
-
-  updateHPBars() {
-    const barWidth = 100;
-    const barHeight = 10;
-
-    this.playerHPBar.clear();
-    const playerHPPercent = this.playerHP / this.playerMaxHP;
-    this.playerHPBar.fillStyle(0x333333);
-    this.playerHPBar.fillRect(100, 150, barWidth, barHeight);
-    this.playerHPBar.fillStyle(0x00ff00);
-    this.playerHPBar.fillRect(100, 150, barWidth * playerHPPercent, barHeight);
-
-    this.enemyHPBar.clear();
-    const enemyHPPercent = this.enemyHP / this.enemyMaxHP;
-    this.enemyHPBar.fillStyle(0x333333);
-    this.enemyHPBar.fillRect(this['cameras'].main.width - 200, 150, barWidth, barHeight);
-    this.enemyHPBar.fillStyle(0xff0000);
-    this.enemyHPBar.fillRect(this['cameras'].main.width - 200, 150, barWidth * enemyHPPercent, barHeight);
-  }
-
-  addToLog(message: string) {
-    this.combatLog.push(message);
-    if (this.combatLog.length > 5) {
-      this.combatLog.shift();
-    }
-    this.logText.setText(this.combatLog.join('\n'));
-  }
-
-  victory() {
-    this.gameOver = true;
-    this.addToLog(`\n🎉 VICTORY! ${this.enemyName} defeated!`);
-    this.turnText.setText('VICTORY!').setColor('#00ff00');
-    
-    this['tweens'].add({
-      targets: this.enemySprite,
-      alpha: 0,
-      duration: 1000
-    });
-  }
-
-  defeat() {
-    this.gameOver = true;
-    this.addToLog('\n💀 DEFEAT! You have fallen...');
-    this.turnText.setText('DEFEAT').setColor('#ff0000');
-    
-    this['tweens'].add({
-      targets: this.playerSprite,
-      alpha: 0,
-      duration: 1000
-    });
-  }
-  };
+// ============ ENEMY DEFINITIONS ============
+export interface Enemy {
+  id: string;
+  name: string;
+  hp: number;
+  ac: number;
+  attackBonus: number;
+  damage: string;
+  damageType: string;
+  xp: number;
+  cr: string;
+  abilities?: string[];
+  description: string;
+  color: number;       // Colore principale del nemico
+  size: number;        // Moltiplicatore dimensione (1 = normale)
+  shape: 'humanoid' | 'beast' | 'undead' | 'giant';
 }
 
+export const ENEMIES: Enemy[] = [
+  // CR 1/4
+  { id: 'goblin', name: 'Goblin', hp: 7, ac: 15, attackBonus: 4, damage: '1d6+2', damageType: 'slashing', xp: 50, cr: '1/4', description: 'Piccolo e subdolo, attacca in gruppo.', color: 0x4a7c3f, size: 0.7, shape: 'humanoid' },
+  { id: 'skeleton', name: 'Scheletro', hp: 13, ac: 13, attackBonus: 4, damage: '1d6+2', damageType: 'piercing', xp: 50, cr: '1/4', abilities: ['Vulnerabile: contundenti'], description: 'Guerriero non morto.', color: 0xd4c9a8, size: 0.9, shape: 'undead' },
+  { id: 'wolf', name: 'Lupo', hp: 11, ac: 13, attackBonus: 4, damage: '2d4+2', damageType: 'piercing', xp: 50, cr: '1/4', description: 'Predatore veloce.', color: 0x6b6b6b, size: 0.8, shape: 'beast' },
+  
+  // CR 1/2
+  { id: 'orc', name: 'Orco', hp: 15, ac: 13, attackBonus: 5, damage: '1d12+3', damageType: 'slashing', xp: 100, cr: '1/2', abilities: ['Aggressivo'], description: 'Brutale e feroce.', color: 0x5a8a4a, size: 1.1, shape: 'humanoid' },
+  { id: 'hobgoblin', name: 'Hobgoblin', hp: 11, ac: 18, attackBonus: 3, damage: '1d8+1', damageType: 'slashing', xp: 100, cr: '1/2', description: 'Guerriero disciplinato.', color: 0xc45c3a, size: 1.0, shape: 'humanoid' },
+  
+  // CR 1
+  { id: 'bugbear', name: 'Bugbear', hp: 27, ac: 16, attackBonus: 4, damage: '2d8+2', damageType: 'bludgeoning', xp: 200, cr: '1', abilities: ['Attacco a sorpresa'], description: 'Colpisce dalle ombre.', color: 0x8b5a2b, size: 1.3, shape: 'humanoid' },
+  { id: 'ghoul', name: 'Ghoul', hp: 22, ac: 12, attackBonus: 4, damage: '2d6+2', damageType: 'slashing', xp: 200, cr: '1', abilities: ['Paralisi (TS Cos 10)'], description: 'Non morto paralizzante.', color: 0x4a5a4a, size: 0.95, shape: 'undead' },
+  
+  // CR 2
+  { id: 'ogre', name: 'Ogre', hp: 59, ac: 11, attackBonus: 6, damage: '2d8+4', damageType: 'bludgeoning', xp: 450, cr: '2', description: 'Gigante devastante.', color: 0x8b7355, size: 1.8, shape: 'giant' },
+  { id: 'ghast', name: 'Ghast', hp: 36, ac: 13, attackBonus: 5, damage: '2d8+3', damageType: 'slashing', xp: 450, cr: '2', abilities: ['Fetore', 'Paralisi'], description: 'Ghoul potenziato.', color: 0x3a4a3a, size: 1.0, shape: 'undead' },
+  
+  // CR 3+
+  { id: 'owlbear', name: 'Gufolorso', hp: 59, ac: 13, attackBonus: 7, damage: '2d8+5', damageType: 'slashing', xp: 700, cr: '3', abilities: ['Multiattacco'], description: 'Bestia feroce.', color: 0x5a4a3a, size: 1.5, shape: 'beast' },
+  { id: 'minotaur', name: 'Minotauro', hp: 76, ac: 14, attackBonus: 6, damage: '2d12+4', damageType: 'slashing', xp: 700, cr: '3', abilities: ['Carica'], description: 'Bestia del labirinto.', color: 0x6a3a2a, size: 1.6, shape: 'beast' },
+  { id: 'troll', name: 'Troll', hp: 84, ac: 15, attackBonus: 7, damage: '2d6+4', damageType: 'slashing', xp: 1800, cr: '5', abilities: ['Rigenerazione 10', 'Vulnerabile: fuoco/acido'], description: 'Si rigenera.', color: 0x2a5a2a, size: 1.7, shape: 'giant' },
+];
+
+// ============ COMPONENT ============
 @Component({
   selector: 'app-combat-game',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './combat-game.html',
   styleUrl: './combat-game.scss',
 })
 export class CombatGame implements OnInit, OnDestroy {
-  @ViewChild('gameContainer', { static: true }) gameContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('gameContainer', { static: false }) gameContainer!: ElementRef<HTMLDivElement>;
   
+  // Character data
   character = signal<string>('');
   sheet = signal<Sheet | null>(null);
-  private game!: Phaser.Game;
+  
+  // Combat state
+  gamePhase = signal<'setup' | 'combat' | 'victory' | 'defeat'>('setup');
+  selectedEnemy = signal<Enemy | null>(null);
+  
+  // HP tracking
+  playerHP = signal<number>(0);
+  playerMaxHP = signal<number>(0);
+  enemyHP = signal<number>(0);
+  enemyMaxHP = signal<number>(0);
+  
+  // Turn management
+  isPlayerTurn = signal<boolean>(true);
+  currentRound = signal<number>(1);
+  isDefending = signal<boolean>(false);
+  
+  // Combat log
+  combatLog = signal<string[]>([]);
+  
+  // Selected action
+  selectedWeapon = signal<Weapon | null>(null);
+  selectedSpell = signal<Spell | null>(null);
+  
+  // Computed
+  enemies = ENEMIES;
+  
+  playerHPPercent = computed(() => 
+    this.playerMaxHP() > 0 ? (this.playerHP() / this.playerMaxHP()) * 100 : 0
+  );
+  
+  enemyHPPercent = computed(() => 
+    this.enemyMaxHP() > 0 ? (this.enemyHP() / this.enemyMaxHP()) * 100 : 0
+  );
+  
+  availableSpells = computed(() => {
+    const s = this.sheet();
+    if (!s) return [];
+    return s.spells.filter(spell => spell.prepared !== false);
+  });
+  
+  // Phaser
+  private game: any = null;
+  private scene: any = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -433,55 +116,958 @@ export class CombatGame implements OnInit, OnDestroy {
   async ngOnInit() {
     this.character.set(this.route.snapshot.paramMap.get('character') || '');
     await this.loadSheet();
-    
-    // Only load Phaser and init game in browser
-    if (isPlatformBrowser(this.platformId)) {
-      Phaser = (await import('phaser')).default;
-      CombatScene = createCombatScene(Phaser);
-      this.initGame();
-    }
   }
 
   async loadSheet() {
     const sheet = await this.db.getCharacterSheet(this.character());
     this.sheet.set(sheet || null);
+    
+    if (sheet) {
+      this.playerHP.set(sheet.currentHP);
+      this.playerMaxHP.set(sheet.maxHP);
+      
+      // Auto-select first weapon
+      if (sheet.weapons?.length > 0) {
+        this.selectedWeapon.set(sheet.weapons[0]);
+      }
+    }
   }
 
-  initGame() {
-    const sheet = this.sheet();
+  selectEnemy(enemy: Enemy) {
+    this.selectedEnemy.set(enemy);
+    this.enemyHP.set(enemy.hp);
+    this.enemyMaxHP.set(enemy.hp);
+  }
+
+  async startCombat() {
+    if (!this.selectedEnemy() || !this.sheet()) return;
+    
+    this.gamePhase.set('combat');
+    this.currentRound.set(1);
+    this.isPlayerTurn.set(true);
+    this.combatLog.set([]);
+    
+    this.addLog(`⚔️ Combattimento iniziato! Round 1`);
+    this.addLog(`${this.getPlayerName()} vs ${this.selectedEnemy()!.name}`);
+    
+    // Init Phaser if in browser - wait for DOM to render
+    if (isPlatformBrowser(this.platformId)) {
+      this.waitForContainerAndInit();
+    }
+  }
+  
+  private waitForContainerAndInit(attempts = 0) {
+    if (attempts > 30) {
+      console.error('Game container not found after multiple attempts');
+      return;
+    }
+    
+    // Try ViewChild first, then fallback to querySelector
+    const container = this.gameContainer?.nativeElement || document.querySelector('.game-container');
+    
+    if (container) {
+      this.initPhaser(container as HTMLElement);
+    } else {
+      setTimeout(() => this.waitForContainerAndInit(attempts + 1), 100);
+    }
+  }
+
+  async initPhaser(container: HTMLElement) {
+    Phaser = (await import('phaser')).default;
+    
+    const self = this;
+    
+    class CombatScene extends Phaser.Scene {
+      private playerSprite!: Phaser.GameObjects.Sprite;
+      private enemyContainer!: Phaser.GameObjects.Container;
+      private bgMusic!: Phaser.Sound.BaseSound;
+      private character: string;
+      private enemyData: Enemy;
+      private breathingTween: any;
+      
+      constructor() {
+        super({ key: 'CombatScene' });
+        this.character = self.character();
+        this.enemyData = self.selectedEnemy()!;
+      }
+      
+      preload() {
+        const scene = this as any;
+        scene.load.image('fightScene', './assets/img/fight_scene1.png');
+        scene.load.audio('bgMusic', './assets/sound/combat-music.WAV');
+        
+        const charPath = `./assets/spritesheet/${this.character}_animation/standard`;
+        scene.load.spritesheet('player_idle', `${charPath}/combat_idle.png`, { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player_attack', `${charPath}/halfslash.png`, { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player_spell', `${charPath}/spellcast.png`, { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player_hurt', `${charPath}/hurt.png`, { frameWidth: 64, frameHeight: 64 });
+      }
+      
+      create() {
+        const scene = this as any;
+        const { width, height } = scene.cameras.main;
+        
+        // Background
+        const bg = scene.add.image(width / 2, height / 2, 'fightScene');
+        bg.setDisplaySize(width, height);
+        
+        // Music
+        this.bgMusic = scene.sound.add('bgMusic', { volume: 0.3, loop: true });
+        (this.bgMusic as any).play();
+        
+        // Player sprite
+        this.playerSprite = scene.add.sprite(150, height / 2, 'player_idle');
+        this.playerSprite.setScale(2.5);
+        
+        // Animations
+        scene.anims.create({ key: 'idle', frames: scene.anims.generateFrameNumbers('player_idle', { start: 6, end: 7 }), frameRate: 6, repeat: -1 });
+        scene.anims.create({ key: 'attack', frames: scene.anims.generateFrameNumbers('player_attack', { start: 18, end: 23 }), frameRate: 12, repeat: 0 });
+        scene.anims.create({ key: 'spell', frames: scene.anims.generateFrameNumbers('player_spell', { start: 21, end: 27 }), frameRate: 10, repeat: 0 });
+        scene.anims.create({ key: 'hurt', frames: scene.anims.generateFrameNumbers('player_hurt', { start: 0, end: 5 }), frameRate: 10, repeat: 0 });
+        
+        this.playerSprite.play('idle');
+        
+        // Create stylized enemy based on type
+        this.createEnemy(scene, width, height);
+        
+        // Store reference
+        self.scene = this;
+      }
+      
+      createEnemy(scene: any, width: number, height: number) {
+        const enemy = this.enemyData;
+        const baseSize = 60 * enemy.size;
+        const x = width - 120;
+        const y = height / 2;
+        
+        this.enemyContainer = scene.add.container(x, y);
+        
+        // Darken the main color for shadows
+        const shadowColor = this.darkenColor(enemy.color, 0.5);
+        
+        switch (enemy.shape) {
+          case 'humanoid':
+            this.createHumanoid(scene, enemy.color, shadowColor, baseSize);
+            break;
+          case 'beast':
+            this.createBeast(scene, enemy.color, shadowColor, baseSize);
+            break;
+          case 'undead':
+            this.createUndead(scene, enemy.color, shadowColor, baseSize);
+            break;
+          case 'giant':
+            this.createGiant(scene, enemy.color, shadowColor, baseSize);
+            break;
+        }
+        
+        // Add glowing eyes
+        const eyeColor = enemy.shape === 'undead' ? 0x00ff00 : 0xff3333;
+        const eyeY = -baseSize * 0.6;
+        const leftEye = scene.add.circle(-baseSize * 0.15, eyeY, baseSize * 0.08, eyeColor);
+        const rightEye = scene.add.circle(baseSize * 0.15, eyeY, baseSize * 0.08, eyeColor);
+        leftEye.setAlpha(0.9);
+        rightEye.setAlpha(0.9);
+        this.enemyContainer.add([leftEye, rightEye]);
+        
+        // Add enemy name label
+        const nameLabel = scene.add.text(0, baseSize * 0.7, enemy.name, {
+          fontSize: '14px',
+          fontFamily: 'Arial',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 3
+        }).setOrigin(0.5);
+        this.enemyContainer.add(nameLabel);
+        
+        // Breathing animation
+        this.breathingTween = scene.tweens.add({
+          targets: this.enemyContainer,
+          scaleY: 1.03,
+          scaleX: 0.98,
+          duration: 1200,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
+      
+      createHumanoid(scene: any, color: number, shadow: number, size: number) {
+        // Body (rounded rectangle)
+        const body = scene.add.rectangle(0, 0, size * 0.6, size * 0.9, color);
+        body.setStrokeStyle(2, shadow);
+        
+        // Head
+        const head = scene.add.circle(0, -size * 0.65, size * 0.25, color);
+        head.setStrokeStyle(2, shadow);
+        
+        // Arms
+        const leftArm = scene.add.rectangle(-size * 0.4, -size * 0.1, size * 0.15, size * 0.5, color);
+        leftArm.setStrokeStyle(2, shadow);
+        leftArm.setAngle(-15);
+        
+        const rightArm = scene.add.rectangle(size * 0.4, -size * 0.1, size * 0.15, size * 0.5, color);
+        rightArm.setStrokeStyle(2, shadow);
+        rightArm.setAngle(15);
+        
+        // Weapon (sword or club)
+        const weapon = scene.add.rectangle(size * 0.55, -size * 0.3, size * 0.08, size * 0.6, 0x888888);
+        weapon.setStrokeStyle(1, 0x555555);
+        weapon.setAngle(30);
+        
+        this.enemyContainer.add([body, head, leftArm, rightArm, weapon]);
+      }
+      
+      createBeast(scene: any, color: number, shadow: number, size: number) {
+        // Body (horizontal oval)
+        const body = scene.add.ellipse(0, 0, size * 1.2, size * 0.7, color);
+        body.setStrokeStyle(2, shadow);
+        
+        // Head
+        const head = scene.add.ellipse(-size * 0.5, -size * 0.25, size * 0.5, size * 0.4, color);
+        head.setStrokeStyle(2, shadow);
+        
+        // Snout
+        const snout = scene.add.ellipse(-size * 0.75, -size * 0.2, size * 0.25, size * 0.15, this.lightenColor(color, 0.2));
+        
+        // Ears/horns (for minotaur/owlbear)
+        const leftEar = scene.add.triangle(-size * 0.6, -size * 0.55, 0, 20, -10, 0, 10, 0, shadow);
+        const rightEar = scene.add.triangle(-size * 0.35, -size * 0.55, 0, 20, -10, 0, 10, 0, shadow);
+        
+        // Legs
+        const legs: any[] = [];
+        for (let i = 0; i < 4; i++) {
+          const legX = -size * 0.3 + (i * size * 0.2);
+          const leg = scene.add.rectangle(legX, size * 0.45, size * 0.12, size * 0.35, shadow);
+          legs.push(leg);
+        }
+        
+        // Tail
+        const tail = scene.add.ellipse(size * 0.55, size * 0.1, size * 0.3, size * 0.1, shadow);
+        tail.setAngle(-20);
+        
+        this.enemyContainer.add([tail, ...legs, body, head, snout, leftEar, rightEar]);
+      }
+      
+      createUndead(scene: any, color: number, shadow: number, size: number) {
+        // Ragged body
+        const body = scene.add.polygon(0, 0, [
+          -size * 0.3, -size * 0.4,
+          size * 0.3, -size * 0.4,
+          size * 0.35, size * 0.5,
+          size * 0.1, size * 0.55,
+          -size * 0.1, size * 0.5,
+          -size * 0.35, size * 0.55
+        ], color);
+        body.setStrokeStyle(2, shadow);
+        
+        // Skull head
+        const head = scene.add.circle(0, -size * 0.6, size * 0.28, color);
+        head.setStrokeStyle(2, shadow);
+        
+        // Jaw
+        const jaw = scene.add.arc(0, -size * 0.45, size * 0.18, 0, 180, false, shadow);
+        
+        // Skeletal arms
+        const leftArm = scene.add.rectangle(-size * 0.45, -size * 0.15, size * 0.08, size * 0.5, color);
+        leftArm.setStrokeStyle(1, shadow);
+        leftArm.setAngle(-20);
+        
+        const rightArm = scene.add.rectangle(size * 0.45, -size * 0.15, size * 0.08, size * 0.5, color);
+        rightArm.setStrokeStyle(1, shadow);
+        rightArm.setAngle(20);
+        
+        // Ghostly glow
+        const glow = scene.add.circle(0, 0, size * 0.8, 0x00ff00, 0.1);
+        
+        this.enemyContainer.add([glow, body, head, jaw, leftArm, rightArm]);
+      }
+      
+      createGiant(scene: any, color: number, shadow: number, size: number) {
+        // Massive body
+        const body = scene.add.rectangle(0, 0, size * 0.8, size * 1.1, color);
+        body.setStrokeStyle(3, shadow);
+        
+        // Head (smaller relative to body)
+        const head = scene.add.circle(0, -size * 0.75, size * 0.3, color);
+        head.setStrokeStyle(3, shadow);
+        
+        // Massive arms
+        const leftArm = scene.add.rectangle(-size * 0.55, -size * 0.1, size * 0.25, size * 0.7, color);
+        leftArm.setStrokeStyle(2, shadow);
+        leftArm.setAngle(-10);
+        
+        const rightArm = scene.add.rectangle(size * 0.55, -size * 0.1, size * 0.25, size * 0.7, color);
+        rightArm.setStrokeStyle(2, shadow);
+        rightArm.setAngle(10);
+        
+        // Thick legs
+        const leftLeg = scene.add.rectangle(-size * 0.25, size * 0.7, size * 0.25, size * 0.4, shadow);
+        const rightLeg = scene.add.rectangle(size * 0.25, size * 0.7, size * 0.25, size * 0.4, shadow);
+        
+        // Club weapon
+        const club = scene.add.ellipse(size * 0.85, 0, size * 0.2, size * 0.6, 0x4a3520);
+        club.setStrokeStyle(2, 0x2a1510);
+        club.setAngle(20);
+        
+        this.enemyContainer.add([leftLeg, rightLeg, body, head, leftArm, rightArm, club]);
+      }
+      
+      darkenColor(color: number, factor: number): number {
+        const r = Math.floor(((color >> 16) & 0xff) * factor);
+        const g = Math.floor(((color >> 8) & 0xff) * factor);
+        const b = Math.floor((color & 0xff) * factor);
+        return (r << 16) | (g << 8) | b;
+      }
+      
+      lightenColor(color: number, factor: number): number {
+        const r = Math.min(255, Math.floor(((color >> 16) & 0xff) * (1 + factor)));
+        const g = Math.min(255, Math.floor(((color >> 8) & 0xff) * (1 + factor)));
+        const b = Math.min(255, Math.floor((color & 0xff) * (1 + factor)));
+        return (r << 16) | (g << 8) | b;
+      }
+      
+      playAnimation(anim: string) {
+        this.playerSprite.play(anim);
+        this.playerSprite.once('animationcomplete', () => {
+          this.playerSprite.play('idle');
+        });
+      }
+      
+      shakeEnemy() {
+        const scene = this as any;
+        scene.tweens.add({
+          targets: this.enemyContainer,
+          x: this.enemyContainer.x + 15,
+          duration: 50,
+          yoyo: true,
+          repeat: 3
+        });
+      }
+      
+      shakePlayer() {
+        const scene = this as any;
+        scene.tweens.add({
+          targets: this.playerSprite,
+          x: this.playerSprite.x - 15,
+          duration: 50,
+          yoyo: true,
+          repeat: 3
+        });
+      }
+      
+      flashEnemy() {
+        const scene = this as any;
+        scene.tweens.add({
+          targets: this.enemyContainer,
+          alpha: 0.3,
+          duration: 100,
+          yoyo: true,
+          repeat: 2
+        });
+      }
+      
+      enemyDeath() {
+        const scene = this as any;
+        if (this.breathingTween) this.breathingTween.stop();
+        
+        scene.tweens.add({
+          targets: this.enemyContainer,
+          alpha: 0,
+          y: this.enemyContainer.y + 50,
+          scaleX: 0.5,
+          scaleY: 0.5,
+          angle: 15,
+          duration: 800,
+          ease: 'Power2'
+        });
+      }
+      
+      // Attack effect - slash lines
+      showAttackEffect() {
+        const scene = this as any;
+        const { width, height } = scene.cameras.main;
+        const targetX = width - 120;
+        const targetY = height / 2;
+        
+        // Create slash lines
+        for (let i = 0; i < 3; i++) {
+          const line = scene.add.line(
+            targetX, targetY - 20 + (i * 20),
+            -30, -20, 30, 20,
+            0xffff00, 1
+          );
+          line.setLineWidth(3);
+          line.setAlpha(0);
+          
+          scene.tweens.add({
+            targets: line,
+            alpha: 1,
+            scaleX: 1.5,
+            duration: 100,
+            delay: i * 50,
+            yoyo: true,
+            onComplete: () => line.destroy()
+          });
+        }
+      }
+      
+      // Spell effect - magic particles
+      showSpellEffect(damageType: string) {
+        const scene = this as any;
+        const { width, height } = scene.cameras.main;
+        const startX = 200;
+        const startY = height / 2 - 30;
+        const targetX = width - 120;
+        const targetY = height / 2;
+        
+        // Color based on damage type
+        let color = 0x9933ff; // default purple
+        if (damageType.includes('fuoco') || damageType.includes('fire')) color = 0xff6600;
+        else if (damageType.includes('freddo') || damageType.includes('cold')) color = 0x66ccff;
+        else if (damageType.includes('fulmine') || damageType.includes('lightning')) color = 0xffff00;
+        else if (damageType.includes('acido') || damageType.includes('acid')) color = 0x33ff33;
+        else if (damageType.includes('necro')) color = 0x330066;
+        else if (damageType.includes('radiant')) color = 0xffffcc;
+        
+        // Create magic projectile
+        const projectile = scene.add.circle(startX, startY, 12, color);
+        const glow = scene.add.circle(startX, startY, 20, color, 0.3);
+        
+        // Particles trail
+        const particles: any[] = [];
+        for (let i = 0; i < 8; i++) {
+          const p = scene.add.circle(startX, startY, 4 + Math.random() * 4, color, 0.6);
+          particles.push(p);
+        }
+        
+        // Animate projectile
+        scene.tweens.add({
+          targets: [projectile, glow],
+          x: targetX,
+          y: targetY,
+          duration: 400,
+          ease: 'Power1',
+          onUpdate: () => {
+            particles.forEach((p, i) => {
+              scene.tweens.add({
+                targets: p,
+                x: projectile.x - 10 - Math.random() * 20,
+                y: projectile.y + (Math.random() - 0.5) * 30,
+                alpha: 0,
+                duration: 150,
+                delay: i * 20
+              });
+            });
+          },
+          onComplete: () => {
+            // Explosion at target
+            for (let i = 0; i < 12; i++) {
+              const angle = (i / 12) * Math.PI * 2;
+              const explosion = scene.add.circle(targetX, targetY, 8, color);
+              scene.tweens.add({
+                targets: explosion,
+                x: targetX + Math.cos(angle) * 60,
+                y: targetY + Math.sin(angle) * 60,
+                alpha: 0,
+                scale: 0.3,
+                duration: 300,
+                onComplete: () => explosion.destroy()
+              });
+            }
+            projectile.destroy();
+            glow.destroy();
+            particles.forEach(p => p.destroy());
+          }
+        });
+      }
+      
+      // Enemy attack animation
+      enemyAttack() {
+        const scene = this as any;
+        const originalX = this.enemyContainer.x;
+        
+        // Lunge forward
+        scene.tweens.add({
+          targets: this.enemyContainer,
+          x: originalX - 80,
+          duration: 150,
+          ease: 'Power2',
+          yoyo: true,
+          onYoyo: () => {
+            // Impact effect
+            this.showImpactEffect();
+          }
+        });
+      }
+      
+      showImpactEffect() {
+        const scene = this as any;
+        const { height } = scene.cameras.main;
+        const impactX = 180;
+        const impactY = height / 2;
+        
+        // Impact star
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const star = scene.add.star(impactX, impactY, 5, 5, 15, 0xff3333);
+          star.setAngle(angle * (180 / Math.PI));
+          
+          scene.tweens.add({
+            targets: star,
+            x: impactX + Math.cos(angle) * 40,
+            y: impactY + Math.sin(angle) * 40,
+            alpha: 0,
+            scale: 0.5,
+            duration: 200,
+            onComplete: () => star.destroy()
+          });
+        }
+      }
+      
+      // Heal effect
+      showHealEffect() {
+        const scene = this as any;
+        const { height } = scene.cameras.main;
+        const x = 150;
+        const y = height / 2;
+        
+        // Green healing particles rising up
+        for (let i = 0; i < 10; i++) {
+          const particle = scene.add.circle(
+            x + (Math.random() - 0.5) * 60,
+            y + 30,
+            6 + Math.random() * 4,
+            0x33ff66,
+            0.8
+          );
+          
+          scene.tweens.add({
+            targets: particle,
+            y: y - 80,
+            alpha: 0,
+            duration: 800 + Math.random() * 400,
+            delay: i * 50,
+            ease: 'Power1',
+            onComplete: () => particle.destroy()
+          });
+        }
+        
+        // Plus sign
+        const plus = scene.add.text(x, y - 20, '+', {
+          fontSize: '32px',
+          color: '#33ff66',
+          stroke: '#006622',
+          strokeThickness: 3
+        }).setOrigin(0.5);
+        
+        scene.tweens.add({
+          targets: plus,
+          y: y - 60,
+          alpha: 0,
+          scale: 1.5,
+          duration: 600,
+          onComplete: () => plus.destroy()
+        });
+      }
+      
+      // Defend effect
+      showDefendEffect() {
+        const scene = this as any;
+        const { height } = scene.cameras.main;
+        const x = 150;
+        const y = height / 2;
+        
+        // Shield icon
+        const shield = scene.add.polygon(x, y, [
+          0, -30, 25, -15, 25, 15, 0, 35, -25, 15, -25, -15
+        ], 0x3399ff, 0.7);
+        shield.setStrokeStyle(3, 0x0066cc);
+        shield.setScale(0);
+        
+        scene.tweens.add({
+          targets: shield,
+          scale: 1.2,
+          duration: 200,
+          yoyo: true,
+          hold: 300,
+          onComplete: () => shield.destroy()
+        });
+      }
+      
+      stopMusic() {
+        if (this.bgMusic) (this.bgMusic as any).stop();
+      }
+      
+      // Victory celebration
+      showVictory() {
+        const scene = this as any;
+        const { width, height } = scene.cameras.main;
+        
+        // Confetti/sparkles
+        for (let i = 0; i < 30; i++) {
+          const colors = [0xffd700, 0xff6600, 0x33ff33, 0x3399ff, 0xff33ff];
+          const particle = scene.add.star(
+            Math.random() * width,
+            -20,
+            5, 4, 10,
+            colors[Math.floor(Math.random() * colors.length)]
+          );
+          
+          scene.tweens.add({
+            targets: particle,
+            y: height + 20,
+            x: particle.x + (Math.random() - 0.5) * 100,
+            angle: Math.random() * 360,
+            duration: 1500 + Math.random() * 1000,
+            delay: Math.random() * 500,
+            onComplete: () => particle.destroy()
+          });
+        }
+      }
+    }
     
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: 800,
-      height: 600,
-      parent: this.gameContainer.nativeElement,
+      width: 600,
+      height: 400,
+      parent: container,
       backgroundColor: '#1a1a2e',
       scene: CombatScene
     };
-
+    
     this.game = new Phaser.Game(config);
+  }
 
-    this.game.scene.start('CombatScene', {
-      playerHP: sheet?.currentHP || 30,
-      playerMaxHP: sheet?.maxHP || 30,
-      playerAC: sheet?.armorClass || 15,
-      playerAttackBonus: sheet?.weapons[0]?.attackBonus || 5,
-      playerDamage: sheet?.weapons[0]?.damage || '1d8+3',
-      playerName: this.character().charAt(0).toUpperCase() + this.character().slice(1),
+  // ============ COMBAT ACTIONS ============
+  
+  attackWithWeapon(weapon: Weapon) {
+    if (!this.isPlayerTurn() || this.gamePhase() !== 'combat') return;
+    
+    this.selectedWeapon.set(weapon);
+    const sheet = this.sheet()!;
+    const enemy = this.selectedEnemy()!;
+    
+    // Roll to hit
+    const d20 = this.rollD20();
+    const attackRoll = d20 + weapon.attackBonus;
+    const isCrit = d20 === 20;
+    const isMiss = d20 === 1;
+    
+    this.addLog(`🎲 ${this.getPlayerName()} attacca con ${weapon.name}: ${d20} + ${weapon.attackBonus} = ${attackRoll}`);
+    
+    // Play animation
+    if (this.scene) {
+      this.scene.playAnimation('attack');
+      this.scene.showAttackEffect();
+    }
+    
+    if (isMiss) {
+      this.addLog(`❌ Fallimento critico!`);
+    } else if (isCrit || attackRoll >= enemy.ac) {
+      // Hit!
+      let damage = this.rollDamage(weapon.damage);
+      if (isCrit) {
+        damage = damage * 2;
+        this.addLog(`💥 CRITICO! Danni raddoppiati!`);
+      }
+      
+      this.enemyHP.update(hp => Math.max(0, hp - damage));
+      this.addLog(`✅ Colpito! ${damage} danni ${weapon.damageType}`);
+      
+      if (this.scene) this.scene.shakeEnemy();
+      
+      if (this.enemyHP() <= 0) {
+        this.victory();
+        return;
+      }
+    } else {
+      this.addLog(`❌ Mancato! (CA ${enemy.ac})`);
+    }
+    
+    this.endPlayerTurn();
+  }
+  
+  castSpell(spell: Spell) {
+    if (!this.isPlayerTurn() || this.gamePhase() !== 'combat') return;
+    
+    this.selectedSpell.set(spell);
+    const sheet = this.sheet()!;
+    const enemy = this.selectedEnemy()!;
+    
+    // Play animation
+    if (this.scene) {
+      this.scene.playAnimation('spell');
+      // Infer damage type from school
+      const spellSchool = spell.school?.toLowerCase() || '';
+      let damageType = 'magic';
+      if (spellSchool.includes('evoc')) damageType = 'fire';
+      else if (spellSchool.includes('necro')) damageType = 'necrotic';
+      this.scene.showSpellEffect(damageType);
+    }
+    
+    this.addLog(`✨ ${this.getPlayerName()} lancia ${spell.name}!`);
+    
+    // Simple damage spell logic
+    if (spell.level === 0) {
+      // Cantrip - no slot needed
+      const damage = this.rollDamage(this.getCantripDamage(spell, sheet.level));
+      this.enemyHP.update(hp => Math.max(0, hp - damage));
+      this.addLog(`💫 ${damage} danni magici!`);
+      
+      if (this.scene) this.scene.flashEnemy();
+    } else {
+      // Leveled spell - check slots
+      const slots = sheet.spellSlots?.[spell.level];
+      if (!slots || slots.current <= 0) {
+        this.addLog(`⚠️ Nessuno slot di livello ${spell.level} disponibile!`);
+        return;
+      }
+      
+      // Use slot
+      const damage = this.rollDamage(this.getSpellDamage(spell));
+      this.enemyHP.update(hp => Math.max(0, hp - damage));
+      this.addLog(`💫 ${damage} danni! (Slot lvl ${spell.level} usato)`);
+      
+      if (this.scene) this.scene.flashEnemy();
+    }
+    
+    if (this.enemyHP() <= 0) {
+      this.victory();
+      return;
+    }
+    
+    this.endPlayerTurn();
+  }
+  
+  defend() {
+    if (!this.isPlayerTurn() || this.gamePhase() !== 'combat') return;
+    
+    this.isDefending.set(true);
+    this.addLog(`🛡️ ${this.getPlayerName()} si mette in difesa (+2 CA fino al prossimo turno)`);
+    
+    if (this.scene) this.scene.showDefendEffect();
+    
+    this.endPlayerTurn();
+  }
+  
+  usePotion() {
+    if (!this.isPlayerTurn() || this.gamePhase() !== 'combat') return;
+    
+    const healing = this.rollDamage('2d4+2');
+    this.playerHP.update(hp => Math.min(this.playerMaxHP(), hp + healing));
+    this.addLog(`🧪 ${this.getPlayerName()} beve una pozione! Recupera ${healing} HP`);
+    
+    if (this.scene) this.scene.showHealEffect();
+    
+    this.endPlayerTurn();
+  }
+  
+  // ============ TURN MANAGEMENT ============
+  
+  endPlayerTurn() {
+    this.isPlayerTurn.set(false);
+    
+    // Enemy turn after delay
+    setTimeout(() => {
+      this.enemyTurn();
+    }, 1500);
+  }
+  
+  enemyTurn() {
+    if (this.gamePhase() !== 'combat') return;
+    
+    const enemy = this.selectedEnemy()!;
+    const sheet = this.sheet()!;
+    
+    // Enemy attack
+    const d20 = this.rollD20();
+    const attackRoll = d20 + enemy.attackBonus;
+    const playerAC = sheet.armorClass + (this.isDefending() ? 2 : 0);
+    
+    this.addLog(`👹 ${enemy.name} attacca: ${d20} + ${enemy.attackBonus} = ${attackRoll}`);
+    
+    // Enemy attack animation
+    if (this.scene) this.scene.enemyAttack();
+    
+    if (d20 === 1) {
+      this.addLog(`❌ ${enemy.name} fallisce miseramente!`);
+    } else if (d20 === 20 || attackRoll >= playerAC) {
+      let damage = this.rollDamage(enemy.damage);
+      if (d20 === 20) {
+        damage = damage * 2;
+        this.addLog(`💥 CRITICO!`);
+      }
+      
+      this.playerHP.update(hp => Math.max(0, hp - damage));
+      this.addLog(`💔 Subisci ${damage} danni ${enemy.damageType}!`);
+      
+      if (this.scene) {
+        this.scene.playAnimation('hurt');
+        this.scene.shakePlayer();
+      }
+      
+      if (this.playerHP() <= 0) {
+        this.defeat();
+        return;
+      }
+    } else {
+      this.addLog(`🛡️ Parato! (CA ${playerAC})`);
+    }
+    
+    // Special abilities
+    if (enemy.abilities?.includes('Rigenerazione 10') && this.enemyHP() > 0) {
+      this.enemyHP.update(hp => Math.min(this.enemyMaxHP(), hp + 10));
+      this.addLog(`♻️ ${enemy.name} rigenera 10 HP!`);
+    }
+    
+    // End enemy turn, start new round
+    setTimeout(() => {
+      this.isDefending.set(false);
+      this.currentRound.update(r => r + 1);
+      this.isPlayerTurn.set(true);
+      this.addLog(`\n⚔️ Round ${this.currentRound()}`);
+    }, 1000);
+  }
+  
+  // ============ COMBAT END ============
+  
+  victory() {
+    this.gamePhase.set('victory');
+    const enemy = this.selectedEnemy()!;
+    
+    this.addLog(`\n🎉 VITTORIA!`);
+    this.addLog(`${enemy.name} sconfitto!`);
+    this.addLog(`Guadagni ${enemy.xp} XP!`);
+    
+    if (this.scene) {
+      this.scene.enemyDeath();
+      this.scene.showVictory();
+    }
+    
+    // Save combat result
+    this.saveCombatResult('victory');
+  }
+  
+  defeat() {
+    this.gamePhase.set('defeat');
+    
+    this.addLog(`\n💀 SCONFITTA!`);
+    this.addLog(`${this.getPlayerName()} è caduto in battaglia...`);
+    
+    // Save combat result
+    this.saveCombatResult('defeat');
+  }
+  
+  async saveCombatResult(result: 'victory' | 'defeat') {
+    const enemy = this.selectedEnemy()!;
+    
+    await this.db.saveCombatEncounter({
       character: this.character(),
-      enemyName: 'Goblin Warrior',
-      enemyMaxHP: 20,
-      enemyAC: 13
+      enemyName: enemy.name,
+      enemyHP: this.enemyHP(),
+      enemyMaxHP: this.enemyMaxHP(),
+      enemyAC: enemy.ac,
+      playerHP: this.playerHP(),
+      playerMaxHP: this.playerMaxHP(),
+      rounds: [],
+      result
     });
+    
+    // Update character HP in database
+    await this.db.updateCharacterHP(this.character(), this.playerHP());
+  }
+  
+  // ============ UTILITY FUNCTIONS ============
+  
+  rollD20(): number {
+    return Math.floor(Math.random() * 20) + 1;
+  }
+  
+  rollDamage(diceString: string): number {
+    const match = diceString.match(/(\d+)d(\d+)([+-]\d+)?/);
+    if (!match) return 1;
+    
+    const numDice = parseInt(match[1]);
+    const diceSize = parseInt(match[2]);
+    const modifier = match[3] ? parseInt(match[3]) : 0;
+    
+    let total = modifier;
+    for (let i = 0; i < numDice; i++) {
+      total += Math.floor(Math.random() * diceSize) + 1;
+    }
+    
+    return Math.max(1, total);
+  }
+  
+  getCantripDamage(spell: Spell, level: number): string {
+    // Scale cantrip damage by level
+    if (level >= 17) return '4d10';
+    if (level >= 11) return '3d10';
+    if (level >= 5) return '2d10';
+    return '1d10';
+  }
+  
+  getSpellDamage(spell: Spell): string {
+    // Simple damage estimation based on level
+    const baseDice = spell.level * 2 + 1;
+    return `${baseDice}d6`;
+  }
+  
+  addLog(message: string) {
+    this.combatLog.update(log => [...log, message]);
+    
+    // Auto-scroll to bottom
+    setTimeout(() => {
+      const logEl = document.querySelector('.combat-log');
+      if (logEl) logEl.scrollTop = logEl.scrollHeight;
+    }, 50);
+  }
+  
+  getPlayerName(): string {
+    return this.character().charAt(0).toUpperCase() + this.character().slice(1);
+  }
+  
+  getEnemyIcon(enemy: Enemy): string {
+    const icons: Record<string, string> = {
+      'humanoid': '👤',
+      'beast': '🐺',
+      'undead': '💀',
+      'giant': '🗿'
+    };
+    return icons[enemy.shape] || '👹';
+  }
+  
+  getModifier(score: number): number {
+    return Math.floor((score - 10) / 2);
+  }
+  
+  resetCombat() {
+    if (this.scene) this.scene.stopMusic();
+    if (this.game) {
+      this.game.destroy(true);
+      this.game = null;
+      this.scene = null;
+    }
+    
+    this.gamePhase.set('setup');
+    this.selectedEnemy.set(null);
+    this.combatLog.set([]);
+    this.currentRound.set(1);
+    this.isDefending.set(false);
+    
+    // Reload sheet for fresh HP
+    this.loadSheet();
   }
 
   ngOnDestroy() {
+    if (this.scene) this.scene.stopMusic();
     if (this.game && isPlatformBrowser(this.platformId)) {
       this.game.destroy(true);
     }
   }
 
   goBack() {
+    if (this.scene) this.scene.stopMusic();
     this.router.navigate([this.character(), 'home']);
   }
 }

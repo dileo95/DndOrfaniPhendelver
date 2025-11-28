@@ -12,10 +12,165 @@
 </div>
 
 <div class="combat-container" style="padding-top: 60px;">
-  <div #gameContainer class="game-container"></div>
-
-  <div class="combat-info">
-    <p>Use ATTACK, SPELL, or DEFEND buttons in the game</p>
-    <p>Stats loaded from your character sheet</p>
-  </div>
+  
+  <!-- ========== SETUP PHASE ========== -->
+  @if (gamePhase() === 'setup') {
+    <div class="setup-phase">
+      <h2>🎯 Seleziona il tuo avversario</h2>
+      
+      <div class="enemy-grid">
+        @for (enemy of enemies; track enemy.id) {
+          <div 
+            class="enemy-card" 
+            [class.selected]="selectedEnemy()?.id === enemy.id"
+            [style.border-left]="'4px solid #' + enemy.color.toString(16).padStart(6, '0')"
+            (click)="selectEnemy(enemy)">
+            <div class="enemy-header">
+              <span class="enemy-icon" [style.background]="'#' + enemy.color.toString(16).padStart(6, '0')">
+                {{ getEnemyIcon(enemy) }}
+              </span>
+              <span class="enemy-name">{{ enemy.name }}</span>
+              <span class="enemy-cr">CR {{ enemy.cr }}</span>
+            </div>
+            <div class="enemy-stats">
+              <span>❤️ {{ enemy.hp }} HP</span>
+              <span>🛡️ CA {{ enemy.ac }}</span>
+              <span>⚔️ +{{ enemy.attackBonus }}</span>
+            </div>
+            <div class="enemy-damage">{{ enemy.damage }} {{ enemy.damageType }}</div>
+            @if (enemy.abilities) {
+              <div class="enemy-abilities">
+                @for (ability of enemy.abilities; track ability) {
+                  <span class="ability-tag">{{ ability }}</span>
+                }
+              </div>
+            }
+            <p class="enemy-desc">{{ enemy.description }}</p>
+            <div class="enemy-xp">🏆 {{ enemy.xp }} XP</div>
+          </div>
+        }
+      </div>
+      
+      @if (selectedEnemy()) {
+        <button class="btn-start" (click)="startCombat()">
+          ⚔️ Inizia Combattimento vs {{ selectedEnemy()!.name }}
+        </button>
+      }
+    </div>
+  }
+  
+  <!-- ========== COMBAT PHASE ========== -->
+  @if (gamePhase() === 'combat' || gamePhase() === 'victory' || gamePhase() === 'defeat') {
+    <div class="combat-phase">
+      <!-- Game Canvas -->
+      <div class="game-area">
+        <div #gameContainer class="game-container"></div>
+        
+        <!-- HP Bars Overlay -->
+        <div class="hp-overlay">
+          <div class="hp-section player-hp">
+            <span class="hp-name">{{ getPlayerName() }}</span>
+            <div class="hp-bar-container">
+              <div class="hp-bar" [style.width.%]="playerHPPercent()" 
+                   [class.low]="playerHPPercent() < 25"
+                   [class.medium]="playerHPPercent() >= 25 && playerHPPercent() < 50"></div>
+            </div>
+            <span class="hp-text">{{ playerHP() }} / {{ playerMaxHP() }}</span>
+          </div>
+          
+          <div class="round-indicator">Round {{ currentRound() }}</div>
+          
+          <div class="hp-section enemy-hp">
+            <span class="hp-name">{{ selectedEnemy()!.name }}</span>
+            <div class="hp-bar-container">
+              <div class="hp-bar enemy" [style.width.%]="enemyHPPercent()"></div>
+            </div>
+            <span class="hp-text">{{ enemyHP() }} / {{ enemyMaxHP() }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Combat Controls -->
+      @if (gamePhase() === 'combat') {
+        <div class="combat-controls" [class.disabled]="!isPlayerTurn()">
+          <div class="turn-indicator" [class.player-turn]="isPlayerTurn()">
+            {{ isPlayerTurn() ? '🎮 Il tuo turno!' : '👹 Turno nemico...' }}
+          </div>
+          
+          <!-- Weapons -->
+          <div class="action-section">
+            <h3>⚔️ Armi</h3>
+            <div class="action-buttons">
+              @if (sheet()?.weapons) {
+                @for (weapon of sheet()!.weapons; track weapon.name) {
+                  <button class="action-btn weapon" (click)="attackWithWeapon(weapon)" [disabled]="!isPlayerTurn()">
+                    <span class="action-name">{{ weapon.name }}</span>
+                    <span class="action-detail">+{{ weapon.attackBonus }} | {{ weapon.damage }}</span>
+                  </button>
+                }
+              }
+            </div>
+          </div>
+          
+          <!-- Spells -->
+          @if (availableSpells().length > 0) {
+            <div class="action-section">
+              <h3>✨ Incantesimi</h3>
+              <div class="action-buttons spells">
+                @for (spell of availableSpells(); track spell.name) {
+                  <button class="action-btn spell" (click)="castSpell(spell)" [disabled]="!isPlayerTurn()">
+                    <span class="action-name">{{ spell.name }}</span>
+                    <span class="action-detail">Lvl {{ spell.level }} | {{ spell.school }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+          
+          <!-- Other Actions -->
+          <div class="action-section">
+            <h3>🎯 Azioni</h3>
+            <div class="action-buttons">
+              <button class="action-btn defend" (click)="defend()" [disabled]="!isPlayerTurn()">
+                <span class="action-name">🛡️ Difesa</span>
+                <span class="action-detail">+2 CA fino al prossimo turno</span>
+              </button>
+              <button class="action-btn potion" (click)="usePotion()" [disabled]="!isPlayerTurn()">
+                <span class="action-name">🧪 Pozione</span>
+                <span class="action-detail">Cura 2d4+2 HP</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+      
+      <!-- Victory/Defeat -->
+      @if (gamePhase() === 'victory') {
+        <div class="result-screen victory">
+          <h2>🎉 VITTORIA!</h2>
+          <p>Hai sconfitto {{ selectedEnemy()!.name }}!</p>
+          <p class="xp-gain">+{{ selectedEnemy()!.xp }} XP</p>
+          <button class="btn-restart" (click)="resetCombat()">🔄 Nuovo Combattimento</button>
+        </div>
+      }
+      
+      @if (gamePhase() === 'defeat') {
+        <div class="result-screen defeat">
+          <h2>💀 SCONFITTA</h2>
+          <p>{{ getPlayerName() }} è caduto in battaglia...</p>
+          <button class="btn-restart" (click)="resetCombat()">🔄 Riprova</button>
+        </div>
+      }
+      
+      <!-- Combat Log -->
+      <div class="combat-log">
+        <h3>📜 Log Combattimento</h3>
+        <div class="log-entries">
+          @for (entry of combatLog(); track $index) {
+            <div class="log-entry">{{ entry }}</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </div>

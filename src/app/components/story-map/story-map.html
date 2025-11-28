@@ -2,7 +2,7 @@
   <div class="header-left"></div>
   <div style="position: absolute; left: 0px; top: 0px; width: 100%; height: 40px; background: transparent">
     <h1 style="line-height: 40px; text-align: center; margin: 0; font-size: 30px;">
-      🗺️ Mappa Personaggi & Eventi
+      🗺️ Mappa delle Relazioni
     </h1>
   </div>
   <div class="header-right"></div>
@@ -13,59 +13,117 @@
 
 <div class="map-container" style="padding-top: 60px;">
   <header class="map-header">
-    <h1>🗺️ Mappa Personaggi & Eventi</h1>
-    <p class="subtitle">Grafo interattivo delle relazioni nella storia</p>
+    <h1>🗺️ Mappa delle Relazioni</h1>
+    <p class="subtitle">Grafo interattivo di personaggi, luoghi e organizzazioni</p>
   </header>
 
+  <!-- Filtri per Arco Narrativo -->
+  <div class="arc-controls">
+    <span class="control-label">📚 Saga:</span>
+    @for (arc of storyArcs; track arc.id) {
+      <button 
+        [class.active]="activeArc() === arc.id"
+        (click)="filterByArc(arc.id)"
+        class="arc-btn">
+        {{ arc.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Filtri per Tipo di Entità -->
   <div class="map-controls">
-    <button 
-      [class.active]="activeFilter() === 'all'" 
-      (click)="filterBy('all')"
-      class="filter-btn">
-      Tutti
-    </button>
-    <button 
-      [class.active]="activeFilter() === 'character'" 
-      (click)="filterBy('character')"
-      class="filter-btn character">
-      🧑 Personaggi
-    </button>
-    <button 
-      [class.active]="activeFilter() === 'location'" 
-      (click)="filterBy('location')"
-      class="filter-btn location">
-      📍 Luoghi
-    </button>
-    <button 
-      [class.active]="activeFilter() === 'event'" 
-      (click)="filterBy('event')"
-      class="filter-btn event">
-      ⚔️ Eventi
-    </button>
-    <button 
-      [class.active]="activeFilter() === 'organization'" 
-      (click)="filterBy('organization')"
-      class="filter-btn organization">
-      🏛️ Organizzazioni
-    </button>
+    <span class="control-label">🔍 Tipo:</span>
+    @for (filter of entityFilters; track filter.id) {
+      <button 
+        [class.active]="activeFilter() === filter.id"
+        [style.--filter-color]="filter.color"
+        (click)="filterByType(filter.id)"
+        class="filter-btn">
+        {{ filter.label }}
+      </button>
+    }
+  </div>
+
+  <div class="map-stats">
+    <div class="stat">
+      <span class="stat-value">{{ getFilteredEntities().length }}</span>
+      <span class="stat-label">Entità</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">{{ getFilteredRelations(getFilteredEntities()).length }}</span>
+      <span class="stat-label">Connessioni</span>
+    </div>
   </div>
 
   <div class="map-wrapper">
+    <!-- Controlli Zoom -->
+    <div class="zoom-controls">
+      <button class="zoom-btn" (click)="zoomIn()" title="Zoom In">➕</button>
+      <button class="zoom-btn" (click)="zoomOut()" title="Zoom Out">➖</button>
+      <button class="zoom-btn" (click)="resetZoom()" title="Reset Vista">🔄</button>
+      <button class="zoom-btn" (click)="fitToScreen()" title="Adatta allo Schermo">📐</button>
+    </div>
+    
+    <!-- Barra di ricerca -->
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="🔍 Cerca personaggio, luogo..."
+        [value]="searchQuery()"
+        (input)="onSearch($event)"
+        class="search-input"
+      />
+      @if (searchResults().length > 0) {
+        <div class="search-results">
+          @for (result of searchResults(); track result.id) {
+            <div class="search-result" (click)="focusOnNode(result)">
+              <span class="result-icon">{{ getNodeIcon(result) }}</span>
+              <span class="result-name">{{ result.name }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+    
     <svg #mapSvg class="story-graph"></svg>
+    
+    <!-- Indicatore zoom -->
+    <div class="zoom-indicator">
+      {{ (currentZoom() * 100).toFixed(0) }}%
+    </div>
   </div>
 
   <div class="map-legend">
-    <div class="legend-item">
-      <span class="node character"></span> Personaggi
+    <div class="legend-section">
+      <h4>Tipi di Nodo</h4>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="node" style="background: #4ade80;"></span> Personaggi
+        </div>
+        <div class="legend-item">
+          <span class="node" style="background: #60a5fa;"></span> Luoghi
+        </div>
+        <div class="legend-item">
+          <span class="node" style="background: #c084fc;"></span> Organizzazioni
+        </div>
+      </div>
     </div>
-    <div class="legend-item">
-      <span class="node location"></span> Luoghi
-    </div>
-    <div class="legend-item">
-      <span class="node event"></span> Eventi
-    </div>
-    <div class="legend-item">
-      <span class="node organization"></span> Organizzazioni
+    <div class="legend-section">
+      <h4>Tipi di Relazione</h4>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="line" style="background: #4ade80;"></span> Alleanza
+        </div>
+        <div class="legend-item">
+          <span class="line" style="background: #ef4444;"></span> Nemici
+        </div>
+        <div class="legend-item">
+          <span class="line" style="background: #f472b6;"></span> Famiglia
+        </div>
+        <div class="legend-item">
+          <span class="line" style="background: #c084fc;"></span> Membro di
+        </div>
+      </div>
     </div>
   </div>
 
@@ -73,17 +131,51 @@
     <div class="node-details-overlay" (click)="closeDetails()">
       <div class="node-details" (click)="$event.stopPropagation()">
         <button class="close-btn" (click)="closeDetails()">✕</button>
-        <h2>{{ getNodeTypeIcon(node.type) }} {{ node.name }}</h2>
-        <p class="node-type">{{ node.type | titlecase }}</p>
+        
+        <div class="node-type-badge" [style.background]="getNodeColor(node.type)">
+          {{ getNodeIcon(node) }} {{ getNodeTypeLabel(node.type) }}
+        </div>
+        
+        <h2>{{ node.name }}</h2>
+        
+        @if (node.image) {
+          <div class="node-image">
+            <img [src]="node.image" [alt]="node.name" />
+          </div>
+        }
+        
         <p class="node-description">{{ node.description }}</p>
-        <p class="node-chapter">
-          <strong>Capitolo:</strong> {{ node.chapter === 'previous' ? 'Antefatti' : 'Storia' }}
-        </p>
+        
+        <div class="node-meta">
+          <div class="meta-item">
+            <strong>📖 Capitolo:</strong> {{ node.chapter === 'previous' ? 'Antefatti' : 'Storia Attuale' }}
+          </div>
+          <div class="meta-item">
+            <strong>⭐ Importanza:</strong> 
+            @for (star of [1,2,3]; track star) {
+              <span [class.filled]="star <= node.importance">★</span>
+            }
+          </div>
+        </div>
+        
+        @if (connectedEntities().length > 0) {
+          <div class="connected-entities">
+            <h3>🔗 Connessioni ({{ connectedEntities().length }})</h3>
+            <div class="entity-list">
+              @for (entity of connectedEntities(); track entity.id) {
+                <div class="connected-entity" [style.border-color]="getNodeColor(entity.type)">
+                  <span class="entity-icon">{{ getNodeIcon(entity) }}</span>
+                  <span class="entity-name">{{ entity.name }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
     </div>
   }
 
   <div class="map-instructions">
-    <p>💡 Trascina i nodi per esplorarli • Click per vedere i dettagli</p>
+    <p>💡 <strong>Rotella mouse:</strong> Zoom • <strong>Trascina sfondo:</strong> Sposta vista • <strong>Trascina nodo:</strong> Muovi nodo • <strong>Click:</strong> Dettagli</p>
   </div>
 </div>

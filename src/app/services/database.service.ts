@@ -12,11 +12,62 @@ export interface PlayerNote {
   tags?: string[];
 }
 
+// Classe singola (per multiclasse)
+export interface CharacterClass {
+  name: string;
+  subclass?: string;
+  level: number;
+  hitDie: number; // d6, d8, d10, d12
+}
+
+// Valuta
+export interface Currency {
+  cp: number; // Copper
+  sp: number; // Silver
+  ep: number; // Electrum
+  gp: number; // Gold
+  pp: number; // Platinum
+}
+
+// Oggetto equipaggiamento
+export interface EquipmentItem {
+  name: string;
+  quantity: number;
+  weight?: number;
+  description?: string;
+  equipped?: boolean;
+  attuned?: boolean;
+  type?: string; // weapon, armor, consumable, misc, etc.
+  rarity?: string; // common, uncommon, rare, etc.
+}
+
+// Tiri salvezza morte
+export interface DeathSaves {
+  successes: number;
+  failures: number;
+}
+
 export interface CharacterSheet {
   id?: number;
   character: string;
   
-  // Statistiche base
+  // ========== INFO BASE ==========
+  playerName?: string;
+  characterName?: string;
+  race: string;
+  subrace?: string;
+  background: string;
+  alignment: string;
+  experience?: number;
+  inspiration?: boolean;
+  characterImage?: string; // Base64 o URL
+  
+  // ========== CLASSI (supporto multiclasse) ==========
+  class: string; // Classe principale (retrocompatibilità)
+  level: number; // Livello totale
+  classes?: CharacterClass[]; // Array per multiclasse
+  
+  // ========== STATISTICHE ==========
   strength: number;
   dexterity: number;
   constitution: number;
@@ -24,43 +75,69 @@ export interface CharacterSheet {
   wisdom: number;
   charisma: number;
   
-  // Info base
-  race: string;
-  class: string;
-  level: number;
-  background: string;
-  alignment: string;
-  
-  // Combattimento
+  // ========== COMBATTIMENTO ==========
   armorClass: number;
   initiative: number;
   speed: number;
   currentHP: number;
   maxHP: number;
   temporaryHP: number;
-  hitDice: string;
+  hitDice: string; // Es: "3d10 + 2d8" per multiclasse
+  hitDiceRemaining?: number;
+  deathSaves?: DeathSaves;
   
-  // Proficiency
+  // ========== PROFICIENCY ==========
   proficiencyBonus: number;
-  savingThrows: string[];
-  skills: { [key: string]: number };
+  savingThrows: string[]; // Abilità con proficiency nei TS
+  skills: { [key: string]: number }; // 0 = no, 1 = proficiency, 2 = expertise
   
-  // Equipaggiamento
+  // Altre competenze
+  languages?: string[];
+  armorProficiencies?: string[];
+  weaponProficiencies?: string[];
+  toolProficiencies?: string[];
+  
+  // ========== EQUIPAGGIAMENTO ==========
   weapons: Weapon[];
   armor: string;
-  equipment: string[];
+  shield?: string;
+  equipment: string[]; // Retrocompatibilità
+  inventory?: EquipmentItem[]; // Inventario dettagliato
+  currency?: Currency;
   
-  // Incantesimi
+  // ========== INCANTESIMI ==========
   spellcastingAbility?: string;
   spellSaveDC?: number;
   spellAttackBonus?: number;
   spells: Spell[];
   spellSlots?: { [level: number]: { max: number; current: number } };
+  pactMagic?: { slotLevel: number; slotsMax: number; slotsCurrent: number }; // Warlock
   
-  // Tratti e abilità
+  // ========== TRATTI & BACKGROUND ==========
   features: string[];
-  traits: string[];
+  traits: string[]; // Tratti razziali
   
+  // Personalità (separati per chiarezza)
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  
+  // Aspetto fisico
+  age?: string;
+  height?: string;
+  weight?: string;
+  eyes?: string;
+  skin?: string;
+  hair?: string;
+  appearance?: string; // Descrizione aggiuntiva
+  
+  // Backstory
+  backstory?: string;
+  alliesAndOrganizations?: string;
+  additionalNotes?: string;
+  
+  // ========== META ==========
   updatedAt: Date;
 }
 
@@ -82,6 +159,8 @@ export interface Spell {
   duration: string;
   description: string;
   prepared?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
 }
 
 export interface DiceRoll {

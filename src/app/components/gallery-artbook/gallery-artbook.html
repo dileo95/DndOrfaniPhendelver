@@ -11,53 +11,84 @@
   </button>
 </div>
 
-<div class="artbook-container" (keydown)="onKeydown($event)" tabindex="0">
-  <div #flipBook class="flipbook">
-    <!-- Copertina -->
+<div class="artbook-container" 
+     (keydown)="onKeydown($event)" 
+     (touchstart)="onTouchStart($event)"
+     (touchend)="onTouchEnd($event)"
+     tabindex="0">
+  
+  <div #flipBook class="flipbook" [class.mobile]="isMobile()">
+    <!-- Copertina - immagine fullscreen con titolo overlay -->
     <div class="page page-cover">
-      <div class="page-content">
-        <img [src]="'./assets/img/' + coverImage" alt="Dragon Busters" class="cover-image">
-        <h1 class="cover-title">Dragon Busters<br>Artbook</h1>
+      <div class="cover-background" [style.backgroundImage]="'url(./assets/img/' + coverImage + ')'">
+        <div class="cover-overlay">
+          <h1 class="cover-title">Orfani</h1>
+          <p class="cover-subtitle">Artbook</p>
+        </div>
       </div>
     </div>
 
-    <!-- Pagine con immagini -->
+    <!-- Pagine con immagini e separatori -->
     @for (page of getPages(); track $index) {
-      <div class="page">
-        <div class="page-content">
-          @if (page.left) {
-            <img [src]="page.left" alt="Artwork" class="artwork-image">
-          }
-        </div>
-      </div>
-      @if (page.right) {
-        <div class="page">
-          <div class="page-content">
-            <img [src]="page.right" alt="Artwork" class="artwork-image">
+      @if (page.type === 'separator') {
+        <!-- Pagina separatore sezione -->
+        <div class="page page-separator">
+          <div class="page-content separator-content">
+            <div class="separator-decoration top">❧</div>
+            <h2 class="separator-title">{{ page.title }}</h2>
+            @if (page.subtitle) {
+              <p class="separator-subtitle">{{ page.subtitle }}</p>
+            }
+            <div class="separator-decoration bottom">❧</div>
           </div>
         </div>
+      } @else {
+        <!-- Pagine immagini -->
+        <div class="page">
+          <div class="page-content">
+            @if (page.left) {
+              <img [src]="page.left" alt="Artwork" class="artwork-image">
+            }
+          </div>
+        </div>
+        @if (page.right) {
+          <div class="page">
+            <div class="page-content">
+              <img [src]="page.right" alt="Artwork" class="artwork-image">
+            </div>
+          </div>
+        }
       }
     }
 
     <!-- Pagina finale -->
-    <div class="page">
+    <div class="page page-end-cover">
       <div class="page-content page-end">
         <h2>Fine</h2>
+        <p class="end-subtitle">Grazie per aver sfogliato l'artbook</p>
       </div>
     </div>
   </div>
 
-  <div class="navigation">
+  <!-- Navigazione -->
+  <div class="navigation" [class.mobile-nav]="isMobile()">
     <button 
       class="nav-button prev" 
-      (click)="prevPage()">
+      (click)="prevPage()"
+      [disabled]="currentPage() === 0">
       ‹
     </button>
     <span class="page-indicator">{{ currentPage() + 1 }} / {{ totalPages() }}</span>
     <button 
       class="nav-button next" 
-      (click)="nextPage()">
+      (click)="nextPage()"
+      [disabled]="currentPage() >= totalPages() - 1">
       ›
     </button>
   </div>
+
+  <!-- Hint per mobile -->
+  @if (isMobile()) {
+    <p class="swipe-hint">Scorri o tocca per sfogliare</p>
+  }
 </div>

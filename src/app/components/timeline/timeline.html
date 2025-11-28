@@ -14,28 +14,30 @@
 <div class="timeline-container" style="padding-top: 60px;">
   <header class="timeline-header">
     <h1>⏳ Timeline degli Eventi</h1>
-    <p class="subtitle">Storia cronologica della campagna</p>
+    <p class="subtitle">La cronologia completa della campagna Phendelver</p>
   </header>
 
   <div class="timeline-controls">
-    <button 
-      [class.active]="activeFilter() === 'all'" 
-      (click)="filterBy('all')"
-      class="filter-btn">
-      Tutti gli Eventi
-    </button>
-    <button 
-      [class.active]="activeFilter() === 'previous'" 
-      (click)="filterBy('previous')"
-      class="filter-btn previous">
-      📜 Antefatti (Previous)
-    </button>
-    <button 
-      [class.active]="activeFilter() === 'story'" 
-      (click)="filterBy('story')"
-      class="filter-btn story">
-      ⚔️ Storia (Story)
-    </button>
+    @for (arc of storyArcs; track arc.id) {
+      <button 
+        [class.active]="activeFilter() === arc.id"
+        [style.--arc-color]="arc.color"
+        (click)="filterBy(arc.id)"
+        class="filter-btn">
+        {{ arc.label }}
+      </button>
+    }
+  </div>
+
+  <div class="timeline-stats">
+    <div class="stat">
+      <span class="stat-value">{{ getFilteredEvents().length }}</span>
+      <span class="stat-label">Eventi</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">1490-1513</span>
+      <span class="stat-label">DR</span>
+    </div>
   </div>
 
   <div class="timeline-wrapper">
@@ -44,10 +46,16 @@
 
   <div class="timeline-legend">
     <div class="legend-item">
-      <span class="marker previous"></span> Antefatti
+      <span class="marker" style="background: #fb923c;"></span> Dragon Busters
     </div>
     <div class="legend-item">
-      <span class="marker story"></span> Storia Attuale
+      <span class="marker" style="background: #c084fc;"></span> Prismeer
+    </div>
+    <div class="legend-item">
+      <span class="marker" style="background: #60a5fa;"></span> Backstory Asriel
+    </div>
+    <div class="legend-item">
+      <span class="marker" style="background: #4ade80;"></span> Storia Attuale
     </div>
   </div>
 
@@ -55,13 +63,25 @@
     <div class="event-details-overlay" (click)="closeDetails()">
       <div class="event-details" (click)="$event.stopPropagation()">
         <button class="close-btn" (click)="closeDetails()">✕</button>
+        
+        <div class="event-arc" [style.background]="getEventColor(event)">
+          {{ getEventIcon(event) }} {{ getArcLabel(event) }}
+        </div>
+        
         <div class="event-date">{{ event.date }}</div>
         <h2>{{ event.title }}</h2>
+        
+        @if (event.image) {
+          <div class="event-image">
+            <img [src]="event.image" [alt]="event.title" />
+          </div>
+        }
+        
         <p class="event-description">{{ event.description }}</p>
         
         @if (event.entities && event.entities.length > 0) {
           <div class="event-entities">
-            <h3>Personaggi Coinvolti:</h3>
+            <h3>🎭 Personaggi Coinvolti:</h3>
             <div class="entity-tags">
               @for (entity of event.entities; track entity) {
                 <span class="entity-tag">{{ entity }}</span>
@@ -75,15 +95,11 @@
             <strong>📍 Luogo:</strong> {{ event.location }}
           </div>
         }
-        
-        <div class="event-chapter">
-          <strong>Capitolo:</strong> {{ event.chapter === 'previous' ? 'Antefatti' : 'Storia' }}
-        </div>
       </div>
     </div>
   }
 
   <div class="timeline-instructions">
-    <p>💡 Click su un evento per vedere tutti i dettagli</p>
+    <p>💡 Click su un evento per vedere tutti i dettagli • Usa i filtri per esplorare le diverse saghe</p>
   </div>
 </div>
