@@ -11,13 +11,123 @@
   </button>
 </div>
 
-<div class="notes-container" style="padding-top: 60px;">
+<div class="notes-container" [class.mobile]="isMobile()" style="padding-top: 60px;">
   <header class="notes-header">
     <h1>📝 Appunti di {{ character() | titlecase }}</h1>
-    <button class="btn-add-note" (click)="openNewNoteForm()">
-      ➕ Nuova Nota
-    </button>
+    <!-- Nascosto su mobile, usa FAB -->
+    @if (!isMobile()) {
+      <button class="btn-add-note" (click)="openNewNoteForm()">
+        ➕ Nuova Nota
+      </button>
+    }
   </header>
+
+  <!-- Barra di Ricerca e Filtri -->
+  <div class="search-filters-section">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery"
+        placeholder="Cerca nelle note..."
+        class="search-input">
+      @if (searchQuery()) {
+        <button class="clear-search" (click)="searchQuery.set('')">✕</button>
+      }
+    </div>
+
+    <div class="filters-row">
+      <!-- Toggle View Mode -->
+      <div class="view-toggle">
+        <button 
+          class="view-btn" 
+          [class.active]="viewMode() === 'grid'"
+          (click)="viewMode.set('grid')"
+          title="Vista griglia">
+          ⊞
+        </button>
+        <button 
+          class="view-btn" 
+          [class.active]="viewMode() === 'list'"
+          (click)="viewMode.set('list')"
+          title="Vista lista">
+          ☰
+        </button>
+      </div>
+
+      <!-- Ordinamento -->
+      <div class="sort-select">
+        <label>Ordina:</label>
+        <select [(ngModel)]="sortBy">
+          <option value="newest">Più recenti</option>
+          <option value="oldest">Più vecchi</option>
+          <option value="alphabetical">Alfabetico</option>
+        </select>
+      </div>
+
+      <!-- Reset filtri -->
+      @if (hasActiveFilters()) {
+        <button class="btn-clear-filters" (click)="clearFilters()">
+          🔄 Reset filtri
+        </button>
+      }
+    </div>
+
+    <!-- Filtro Tags -->
+    @if (allTags().length > 0) {
+      <div class="tags-filter">
+        <span class="tags-label">Filtra per tag:</span>
+        <div class="tags-list">
+          @for (tag of allTags(); track tag) {
+            <button 
+              class="filter-tag"
+              [class.active]="isTagSelected(tag)"
+              (click)="toggleTag(tag)">
+              {{ tag }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Filtro Colori -->
+    <div class="colors-filter">
+      <span class="colors-label">Filtra per colore:</span>
+      <div class="colors-list">
+        @for (color of colors; track color.id) {
+          <button 
+            class="filter-color"
+            [class.active]="selectedColor() === color.id"
+            [style.background]="color.hex"
+            [title]="color.label"
+            (click)="selectedColor.set(selectedColor() === color.id ? '' : color.id)">
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Risultati + Expand/Collapse All -->
+    <div class="results-row">
+      <div class="results-info">
+        @if (searchQuery() || selectedTags().length > 0 || selectedColor()) {
+          <span>{{ filteredNotes().length }} risultat{{ filteredNotes().length === 1 ? 'o' : 'i' }} trovat{{ filteredNotes().length === 1 ? 'o' : 'i' }}</span>
+        } @else {
+          <span>{{ notes().length }} not{{ notes().length === 1 ? 'a' : 'e' }} totali</span>
+        }
+      </div>
+      
+      @if (filteredNotes().length > 0) {
+        <div class="expand-collapse-buttons">
+          <button class="btn-expand-all" (click)="expandAll()" title="Espandi tutte">
+            📖 Espandi
+          </button>
+          <button class="btn-collapse-all" (click)="collapseAll()" title="Comprimi tutte">
+            📕 Comprimi
+          </button>
+        </div>
+      }
+    </div>
+  </div>
 
   <!-- Form Nuova/Modifica Nota -->
   @if (showForm()) {
@@ -36,13 +146,73 @@
         </div>
 
         <div class="form-group">
-          <label for="note-content">Contenuto</label>
-          <textarea
-            id="note-content"
-            [(ngModel)]="noteContent"
-            placeholder="Scrivi qui i tuoi appunti..."
-            rows="10"
-            class="form-textarea"></textarea>
+          <div class="content-header">
+            <label for="note-content">Contenuto</label>
+            <button 
+              type="button" 
+              class="btn-preview-toggle"
+              (click)="showPreview.set(!showPreview())">
+              {{ showPreview() ? '✏️ Modifica' : '👁️ Preview' }}
+            </button>
+          </div>
+          
+          <!-- Markdown Toolbar -->
+          @if (!showPreview()) {
+            <div class="markdown-toolbar">
+              <button type="button" (click)="insertBold()" title="Grassetto (Ctrl+B)">
+                <strong>B</strong>
+              </button>
+              <button type="button" (click)="insertItalic()" title="Corsivo (Ctrl+I)">
+                <em>I</em>
+              </button>
+              <button type="button" (click)="insertHeading()" title="Titolo">
+                H
+              </button>
+              <span class="toolbar-divider"></span>
+              <button type="button" (click)="insertList()" title="Lista puntata">
+                •
+              </button>
+              <button type="button" (click)="insertNumberedList()" title="Lista numerata">
+                1.
+              </button>
+              <button type="button" (click)="insertQuote()" title="Citazione">
+                ❝
+              </button>
+              <span class="toolbar-divider"></span>
+              <button type="button" (click)="insertLink()" title="Link">
+                🔗
+              </button>
+              <button type="button" (click)="insertCode()" title="Codice">
+                &lt;/&gt;
+              </button>
+              <button type="button" (click)="insertHr()" title="Linea orizzontale">
+                ―
+              </button>
+            </div>
+          }
+
+          @if (showPreview()) {
+            <!-- Preview Mode -->
+            <div class="markdown-preview" [innerHTML]="parseMarkdown(noteContent())"></div>
+          } @else {
+            <!-- Edit Mode -->
+            <textarea
+              #contentTextarea
+              id="note-content"
+              [(ngModel)]="noteContent"
+              placeholder="Scrivi qui i tuoi appunti...
+
+Supporta Markdown:
+**grassetto**, *corsivo*, ~~barrato~~
+## Titoli
+- Liste puntate
+1. Liste numerate
+> Citazioni
+[link](url)
+`codice`"
+              rows="10"
+              class="form-textarea"></textarea>
+          }
         </div>
 
         <div class="form-group">
@@ -53,6 +223,86 @@
             [(ngModel)]="noteTags"
             placeholder="Es: mostro, indagine, png"
             class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label>Colore</label>
+          <div class="color-picker">
+            @for (color of colors; track color.id) {
+              <button 
+                type="button"
+                class="color-option"
+                [class.selected]="noteColor() === color.id"
+                [style.background]="color.hex"
+                [title]="color.label"
+                (click)="noteColor.set(color.id)">
+                @if (noteColor() === color.id) {
+                  <span class="checkmark">✓</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Link Entità Story-Map -->
+        <div class="form-group">
+          <label>🔗 Collega a Personaggi/Luoghi</label>
+          
+          <!-- Entità già collegate -->
+          @if (noteLinkedEntities().length > 0) {
+            <div class="linked-entities-list">
+              @for (entityId of noteLinkedEntities(); track entityId) {
+                @if (getEntityById(entityId); as entity) {
+                  <div class="linked-entity-chip" [style.borderColor]="getEntityColor(entity.type)">
+                    <span class="entity-icon">{{ getEntityIcon(entity.type) }}</span>
+                    <span class="entity-name">{{ entity.name }}</span>
+                    <button 
+                      type="button" 
+                      class="remove-entity" 
+                      (click)="removeLinkedEntity(entityId)"
+                      title="Rimuovi">✕</button>
+                  </div>
+                }
+              }
+            </div>
+          }
+          
+          <!-- Selettore entità -->
+          <div class="entity-selector">
+            <div class="entity-search-wrapper">
+              <input 
+                type="text"
+                [(ngModel)]="entitySearchQuery"
+                placeholder="Cerca personaggio, luogo, organizzazione..."
+                class="entity-search-input"
+                (focus)="showEntitySelector.set(true)">
+              <button 
+                type="button"
+                class="btn-toggle-selector"
+                (click)="toggleEntitySelector()">
+                {{ showEntitySelector() ? '▲' : '▼' }}
+              </button>
+            </div>
+            
+            @if (showEntitySelector() && filteredEntities().length > 0) {
+              <div class="entity-dropdown">
+                @for (entity of filteredEntities(); track entity.id) {
+                  <button 
+                    type="button"
+                    class="entity-option"
+                    (click)="addLinkedEntity(entity.id)">
+                    <span class="entity-icon" [style.color]="getEntityColor(entity.type)">
+                      {{ getEntityIcon(entity.type) }}
+                    </span>
+                    <div class="entity-info">
+                      <span class="entity-name">{{ entity.name }}</span>
+                      <span class="entity-desc">{{ entity.description | slice:0:50 }}...</span>
+                    </div>
+                  </button>
+                }
+              </div>
+            }
+          </div>
         </div>
 
         <div class="form-actions">
@@ -66,43 +316,170 @@
   }
 
   <!-- Lista Note -->
-  <div class="notes-grid">
-    @if (notes().length === 0) {
+  <div class="notes-grid" [class.list-view]="viewMode() === 'list'">
+    @if (filteredNotes().length === 0) {
       <div class="empty-state">
-        <p>📖 Nessuna nota ancora. Inizia a scrivere i tuoi appunti!</p>
+        @if (searchQuery() || selectedTags().length > 0) {
+          <p>🔍 Nessuna nota trovata con questi filtri</p>
+          <button class="btn-clear-filters" (click)="clearFilters()">Rimuovi filtri</button>
+        } @else {
+          <p>📖 Nessuna nota ancora. Inizia a scrivere i tuoi appunti!</p>
+        }
       </div>
     }
 
-    @for (note of notes(); track note.id) {
-      <div class="note-card">
-        <div class="note-card-header">
-          <h3>{{ note.title }}</h3>
-          <div class="note-actions">
-            <button class="btn-icon" (click)="openEditForm(note)" title="Modifica">
-              ✏️
-            </button>
-            <button class="btn-icon" (click)="deleteNote(note)" title="Elimina">
-              🗑️
-            </button>
-          </div>
+    @for (note of filteredNotes(); track note.id) {
+      <div 
+        class="note-card" 
+        [class.expanded]="isExpanded(note.id!)"
+        [class.swiped]="isNoteSwiped(note.id!)"
+        [class.list-item]="viewMode() === 'list'"
+        [style.borderColor]="getColorHex(note.color || 'gold')"
+        (touchstart)="onTouchStart($event, note.id!)"
+        (touchend)="onTouchEnd($event, note)">
+        
+        <!-- Swipe Actions (revealed on swipe left) -->
+        <div class="swipe-actions" [style.background]="getColorHex(note.color || 'gold')">
+          <button class="swipe-btn edit" (click)="quickEdit(note)" title="Modifica">
+            ✏️
+          </button>
+          <button class="swipe-btn pin" (click)="quickPin(note)" title="Pin">
+            {{ note.pinned ? '⭐' : '☆' }}
+          </button>
+          <button class="swipe-btn delete" (click)="quickDelete(note)" title="Elimina">
+            🗑️
+          </button>
         </div>
-
-        <p class="note-content">{{ note.content }}</p>
-
-        @if (note.tags && note.tags.length > 0) {
-          <div class="note-tags">
-            @for (tag of note.tags; track tag) {
-              <span class="tag">{{ tag }}</span>
+        
+        <!-- Card Content -->
+        <div class="note-card-content">
+          <!-- Pin indicator -->
+          @if (note.pinned) {
+            <div class="pin-badge">📌</div>
+          }
+          
+          <!-- Color stripe -->
+          <div class="color-stripe" [style.background]="getColorHex(note.color || 'gold')"></div>
+          
+          <div class="note-card-header">
+            <h3>{{ note.title }}</h3>
+            <!-- Azioni visibili solo su desktop o in list view -->
+            @if (!isMobile() || viewMode() === 'list') {
+              <div class="note-actions">
+                <button 
+                  class="btn-icon btn-pin" 
+                  [class.pinned]="note.pinned"
+                  (click)="togglePin(note)" 
+                  [title]="note.pinned ? 'Rimuovi pin' : 'Fissa in alto'">
+                  {{ note.pinned ? '⭐' : '☆' }}
+                </button>
+                <button class="btn-icon" (click)="openEditForm(note)" title="Modifica">
+                  ✏️
+                </button>
+                <button class="btn-icon" (click)="deleteNote(note)" title="Elimina">
+                  🗑️
+                </button>
+              </div>
             }
           </div>
-        }
 
-        <div class="note-footer">
-          <small>
-            Aggiornato il {{ formatDate(note.updatedAt) }}
-          </small>
+          <!-- Contenuto con espandi/comprimi -->
+          <div class="note-content-wrapper" [class.truncated]="!isExpanded(note.id!) && shouldTruncate(note.content)">
+            @if (isExpanded(note.id!) || !shouldTruncate(note.content)) {
+              <div class="note-content markdown-rendered" [innerHTML]="parseMarkdown(note.content)"></div>
+            } @else {
+              <div class="note-content markdown-rendered" [innerHTML]="parseMarkdown(getPreviewContent(note.content))"></div>
+            }
+          </div>
+
+          <!-- Pulsante espandi/comprimi -->
+          @if (shouldTruncate(note.content)) {
+            <button 
+              class="btn-expand-toggle" 
+              (click)="toggleExpand(note.id!)"
+              [style.color]="getColorHex(note.color || 'gold')">
+              @if (isExpanded(note.id!)) {
+                <span>▲ Mostra meno</span>
+              } @else {
+                <span>▼ Leggi tutto</span>
+              }
+            </button>
+          }
+
+          @if (note.tags && note.tags.length > 0) {
+            <div class="note-tags">
+              @for (tag of note.tags; track tag) {
+                <span class="tag" [style.borderColor]="getColorHex(note.color || 'gold')">{{ tag }}</span>
+              }
+            </div>
+          }
+
+          <!-- Entità Collegate -->
+          @if (note.linkedEntities && note.linkedEntities.length > 0) {
+            <div class="note-linked-entities">
+              @for (entityId of note.linkedEntities; track entityId) {
+                @if (getEntityById(entityId); as entity) {
+                  <button 
+                    class="linked-entity-badge"
+                    [style.borderColor]="getEntityColor(entity.type)"
+                    [style.background]="getEntityColor(entity.type) + '22'"
+                    (click)="showEntityPreview(entity)"
+                    title="Clicca per dettagli">
+                    <span class="badge-icon">{{ getEntityIcon(entity.type) }}</span>
+                    <span class="badge-name">{{ entity.name }}</span>
+                  </button>
+                }
+              }
+            </div>
+          }
+
+          <div class="note-footer">
+            <small>
+              Aggiornato il {{ formatDate(note.updatedAt) }}
+            </small>
+          </div>
         </div>
       </div>
     }
   </div>
+
+  <!-- Entity Preview Modal -->
+  @if (selectedEntityPreview()) {
+    <div class="entity-preview-overlay" (click)="closeEntityPreview()">
+      <div class="entity-preview-modal" (click)="$event.stopPropagation()">
+        @if (selectedEntityPreview(); as entity) {
+          <div class="entity-preview-header" [style.borderColor]="getEntityColor(entity.type)">
+            <span class="preview-icon" [style.color]="getEntityColor(entity.type)">
+              {{ getEntityIcon(entity.type) }}
+            </span>
+            <h3>{{ entity.name }}</h3>
+            <button class="btn-close-preview" (click)="closeEntityPreview()">✕</button>
+          </div>
+          <div class="entity-preview-body">
+            @if (entity.image) {
+              <img [src]="entity.image" [alt]="entity.name" class="entity-preview-image">
+            }
+            <p class="entity-description">{{ entity.description }}</p>
+            <div class="entity-meta">
+              <span class="entity-type-badge" [style.background]="getEntityColor(entity.type)">
+                {{ entity.type === 'character' ? 'Personaggio' : 
+                   entity.type === 'location' ? 'Luogo' : 
+                   entity.type === 'organization' ? 'Organizzazione' : 'Evento' }}
+              </span>
+              <span class="entity-chapter">
+                {{ entity.chapter === 'previous' ? '📖 Avventure Passate' : '📜 Storia Attuale' }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- FAB Button per mobile - aggiunge nuova nota -->
+  @if (isMobile() && !showForm()) {
+    <button class="fab" (click)="openNewNoteForm()" title="Nuova nota">
+      ➕
+    </button>
+  }
 </div>

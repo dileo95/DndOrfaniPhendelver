@@ -10,6 +10,9 @@ export interface PlayerNote {
   createdAt: Date;
   updatedAt: Date;
   tags?: string[];
+  pinned?: boolean;
+  color?: string; // gold, red, blue, green, purple, orange
+  linkedEntities?: string[]; // IDs delle entità della story-map collegate
 }
 
 // Classe singola (per multiclasse)
