@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, PLATFORM_ID, inject, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, PLATFORM_ID, inject, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { PageFlip } from 'page-flip';
@@ -9,7 +9,7 @@ import { PageFlip } from 'page-flip';
   templateUrl: './gallery-artbook.html',
   styleUrl: './gallery-artbook.scss',
 })
-export class GalleryArtbook implements OnInit, AfterViewInit {
+export class GalleryArtbook implements OnInit, AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   @ViewChild('flipBook', { static: false }) flipBookRef!: ElementRef<HTMLDivElement>;
   
@@ -223,7 +223,37 @@ export class GalleryArtbook implements OnInit, AfterViewInit {
   }
 
   goBack(): void {
+    // Cleanup prima della navigazione
+    if (this.pageFlip) {
+      this.pageFlip.destroy();
+      this.pageFlip = null;
+    }
+    
+    // Ripristina scroll
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.documentElement.style.overflow = '';
+    }
+    
     this.router.navigate(['/diary']);
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup PageFlip e ripristina scroll del body
+    if (this.pageFlip) {
+      this.pageFlip.destroy();
+      this.pageFlip = null;
+    }
+    
+    // Ripristina lo scroll del body (in caso sia stato bloccato)
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+    }
   }
 
   onKeydown(event: KeyboardEvent): void {
