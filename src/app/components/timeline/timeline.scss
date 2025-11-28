@@ -1,10 +1,18 @@
 @use '../../../styles.scss' as *;
 
+:host {
+  display: block;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
 .timeline-container {
   min-height: 100vh;
   padding: 1rem;
   padding-bottom: 4rem;
-  background: linear-gradient(135deg, rgba(30, 60, 114, 0.15), rgba(139, 69, 19, 0.15));
 
   .timeline-header {
     text-align: center;
@@ -51,6 +59,7 @@
     justify-content: center;
     flex-wrap: wrap;
     margin-bottom: 1.5rem;
+    padding: 0 10px;
 
     .filter-btn {
       padding: 0.6rem 1.2rem;
@@ -84,6 +93,7 @@
     justify-content: center;
     gap: 3rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 
     .stat {
       display: flex;
@@ -116,12 +126,14 @@
     border: 2px solid rgba(212, 175, 55, 0.3);
     border-radius: 1rem;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    -webkit-overflow-scrolling: touch;
 
     .timeline-svg {
       display: block;
       margin: 0 auto;
+      min-width: 100%;
 
       ::ng-deep {
         .event-group {
@@ -147,6 +159,7 @@
     justify-content: center;
     margin-top: 1.5rem;
     flex-wrap: wrap;
+    padding: 0 10px;
 
     .legend-item {
       display: flex;
@@ -177,6 +190,8 @@
     justify-content: center;
     z-index: 1000;
     animation: fadeIn 0.3s ease;
+    padding: 1rem;
+    box-sizing: border-box;
 
     .event-details {
       background: linear-gradient(135deg, rgba(44, 24, 16, 0.98), rgba(74, 47, 31, 0.98));
@@ -184,7 +199,7 @@
       border-radius: 1rem;
       padding: 2rem;
       max-width: 650px;
-      width: 90%;
+      width: 100%;
       max-height: 85vh;
       overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
@@ -312,6 +327,7 @@
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.5);
     font-style: italic;
+    padding: 0 10px;
   }
 
   @keyframes fadeIn {
@@ -327,6 +343,189 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+}
+
+// ========== RESPONSIVE - TABLET ==========
+@media (max-width: 1024px) {
+  .timeline-container {
+    .timeline-header h1 {
+      font-size: 2rem;
+    }
+
+    .timeline-stats {
+      gap: 1.5rem;
+    }
+  }
+}
+
+// ========== RESPONSIVE - MOBILE ==========
+@media (max-width: 768px) {
+  .timeline-container {
+    padding: 0.75rem;
+    padding-bottom: 3rem;
+
+    .timeline-header {
+      margin-bottom: 1rem;
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+      }
+    }
+
+    .timeline-controls {
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+
+      .filter-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.75rem;
+        border-radius: 1.5rem;
+      }
+    }
+
+    .timeline-stats {
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .stat {
+        padding: 0.5rem 1rem;
+
+        .stat-value {
+          font-size: 1.2rem;
+        }
+
+        .stat-label {
+          font-size: 0.7rem;
+        }
+      }
+    }
+
+    .timeline-wrapper {
+      max-height: 65vh;
+      border-radius: 0.75rem;
+    }
+
+    .timeline-legend {
+      gap: 0.75rem;
+      margin-top: 1rem;
+
+      .legend-item {
+        font-size: 0.75rem;
+
+        .marker {
+          width: 12px;
+          height: 12px;
+        }
+      }
+    }
+
+    .event-details-overlay {
+      padding: 0.5rem;
+
+      .event-details {
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        max-height: 90vh;
+
+        .close-btn {
+          width: 35px;
+          height: 35px;
+          font-size: 1.2rem;
+          top: 0.75rem;
+          right: 0.75rem;
+        }
+
+        .event-arc {
+          font-size: 0.75rem;
+          padding: 0.3rem 0.8rem;
+        }
+
+        .event-date {
+          font-size: 0.95rem;
+        }
+
+        h2 {
+          font-size: 1.4rem;
+          padding-right: 2rem;
+        }
+
+        .event-description {
+          font-size: 0.95rem;
+          line-height: 1.6;
+        }
+
+        .event-entities {
+          padding: 0.75rem;
+
+          h3 {
+            font-size: 1rem;
+          }
+
+          .entity-tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.7rem;
+          }
+        }
+
+        .event-location {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    .timeline-instructions {
+      font-size: 0.8rem;
+      margin-top: 1rem;
+
+      p {
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+// ========== RESPONSIVE - SMALL MOBILE ==========
+@media (max-width: 480px) {
+  .timeline-container {
+    .timeline-header h1 {
+      font-size: 1.3rem;
+    }
+
+    .timeline-controls .filter-btn {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.7rem;
+    }
+
+    .timeline-legend {
+      gap: 0.5rem;
+
+      .legend-item {
+        font-size: 0.7rem;
+        gap: 0.3rem;
+
+        .marker {
+          width: 10px;
+          height: 10px;
+        }
+      }
+    }
+
+    .event-details-overlay .event-details {
+      padding: 1rem;
+
+      h2 {
+        font-size: 1.2rem;
+      }
+
+      .event-description {
+        font-size: 0.9rem;
+      }
     }
   }
 }

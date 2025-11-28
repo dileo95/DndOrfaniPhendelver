@@ -1,15 +1,25 @@
 @use '../../../styles.scss' as *;
 
+:host {
+  display: block;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
 .combat-container {
   min-height: 100vh;
   padding: 1rem;
-  background: linear-gradient(135deg, rgba(30, 60, 114, 0.15), rgba(139, 69, 19, 0.15));
+  padding-bottom: 2rem;
 }
 
 // ========== SETUP PHASE ==========
 .setup-phase {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 10px;
   
   h2 {
     text-align: center;
@@ -34,8 +44,9 @@
   padding: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
   
-  &:hover {
+  &:hover, &:active {
     border-color: #d4af37;
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
@@ -63,6 +74,7 @@
     justify-content: center;
     font-size: 1.2rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
   }
   
   .enemy-name {
@@ -78,6 +90,7 @@
     border-radius: 1rem;
     font-size: 0.8rem;
     color: #d4af37;
+    flex-shrink: 0;
   }
   
   .enemy-stats {
@@ -86,6 +99,7 @@
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.8);
+    flex-wrap: wrap;
   }
   
   .enemy-damage {
@@ -135,8 +149,9 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
   
-  &:hover {
+  &:hover, &:active {
     transform: scale(1.05);
     box-shadow: 0 8px 30px rgba(74, 222, 128, 0.4);
   }
@@ -146,6 +161,7 @@
 .combat-phase {
   max-width: 1000px;
   margin: 0 auto;
+  padding: 0 10px;
 }
 
 .game-area {
@@ -158,6 +174,14 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  
+  // Make canvas responsive
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 50vh;
+    display: block;
+  }
 }
 
 .hp-overlay {
@@ -168,28 +192,35 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 0.75rem;
+  padding: 0.5rem;
   pointer-events: none;
+  gap: 0.5rem;
 }
 
 .hp-section {
-  background: rgba(0, 0, 0, 0.7);
-  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 0.4rem 0.75rem;
   border-radius: 0.5rem;
-  min-width: 180px;
+  min-width: 100px;
+  flex: 1;
+  max-width: 180px;
 }
 
 .hp-name {
   display: block;
   font-weight: bold;
   color: #fff;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hp-bar-container {
   background: #333;
   border-radius: 0.3rem;
-  height: 12px;
+  height: 10px;
   overflow: hidden;
   margin-bottom: 0.2rem;
 }
@@ -205,16 +236,19 @@
 }
 
 .hp-text {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.8);
 }
 
 .round-indicator {
   background: rgba(212, 175, 55, 0.9);
   color: #000;
-  padding: 0.4rem 1rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 1rem;
   font-weight: bold;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 // ========== COMBAT CONTROLS ==========
@@ -222,7 +256,7 @@
   background: rgba(44, 24, 16, 0.9);
   border: 2px solid rgba(212, 175, 55, 0.4);
   border-radius: 0.75rem;
-  padding: 1rem;
+  padding: 0.75rem;
   margin-bottom: 1rem;
   
   &.disabled {
@@ -233,11 +267,11 @@
 
 .turn-indicator {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #888;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.4rem;
   border-radius: 0.5rem;
   background: rgba(0, 0, 0, 0.3);
   
@@ -248,12 +282,12 @@
 }
 
 .action-section {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   
   h3 {
     color: #d4af37;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
   }
 }
 
@@ -263,8 +297,9 @@
   gap: 0.5rem;
   
   &.spells {
-    max-height: 150px;
+    max-height: 120px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -272,15 +307,18 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.75rem;
   background: rgba(0, 0, 0, 0.4);
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 140px;
+  min-width: 120px;
+  flex: 1;
+  max-width: 180px;
+  -webkit-tap-highlight-color: transparent;
   
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled), &:active:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   }
@@ -293,49 +331,50 @@
   .action-name {
     font-weight: bold;
     color: #fff;
+    font-size: 0.9rem;
   }
   
   .action-detail {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.6);
   }
   
   &.weapon {
     border-color: rgba(212, 175, 55, 0.5);
-    &:hover:not(:disabled) { border-color: #d4af37; background: rgba(212, 175, 55, 0.2); }
+    &:hover:not(:disabled), &:active:not(:disabled) { border-color: #d4af37; background: rgba(212, 175, 55, 0.2); }
   }
   
   &.spell {
     border-color: rgba(156, 39, 176, 0.5);
-    &:hover:not(:disabled) { border-color: #9c27b0; background: rgba(156, 39, 176, 0.2); }
+    &:hover:not(:disabled), &:active:not(:disabled) { border-color: #9c27b0; background: rgba(156, 39, 176, 0.2); }
   }
   
   &.defend {
     border-color: rgba(33, 150, 243, 0.5);
-    &:hover:not(:disabled) { border-color: #2196f3; background: rgba(33, 150, 243, 0.2); }
+    &:hover:not(:disabled), &:active:not(:disabled) { border-color: #2196f3; background: rgba(33, 150, 243, 0.2); }
   }
   
   &.potion {
     border-color: rgba(76, 175, 80, 0.5);
-    &:hover:not(:disabled) { border-color: #4caf50; background: rgba(76, 175, 80, 0.2); }
+    &:hover:not(:disabled), &:active:not(:disabled) { border-color: #4caf50; background: rgba(76, 175, 80, 0.2); }
   }
 }
 
 // ========== RESULT SCREENS ==========
 .result-screen {
   text-align: center;
-  padding: 2rem;
+  padding: 1.5rem;
   background: rgba(44, 24, 16, 0.95);
   border-radius: 1rem;
   margin-bottom: 1rem;
   
   h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
   }
   
   p {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: rgba(255, 255, 255, 0.8);
     margin-bottom: 0.5rem;
   }
@@ -343,7 +382,7 @@
   &.victory {
     border: 3px solid #4ade80;
     h2 { color: #4ade80; }
-    .xp-gain { color: #ffd700; font-size: 1.5rem; font-weight: bold; }
+    .xp-gain { color: #ffd700; font-size: 1.3rem; font-weight: bold; }
   }
   
   &.defeat {
@@ -363,8 +402,9 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
   
-  &:hover {
+  &:hover, &:active {
     transform: scale(1.05);
   }
 }
@@ -374,23 +414,24 @@
   background: rgba(0, 0, 0, 0.5);
   border: 2px solid rgba(212, 175, 55, 0.3);
   border-radius: 0.75rem;
-  padding: 1rem;
-  max-height: 200px;
+  padding: 0.75rem;
+  max-height: 150px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   
   h3 {
     color: #d4af37;
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
   }
   
   .log-entries {
     font-family: monospace;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
   
   .log-entry {
-    padding: 0.2rem 0;
+    padding: 0.15rem 0;
     color: rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     
@@ -398,5 +439,168 @@
       border-bottom: none;
       color: #fff;
     }
+  }
+}
+
+// ========== RESPONSIVE - TABLET ==========
+@media (max-width: 768px) {
+  .combat-container {
+    padding: 0.75rem;
+    padding-bottom: 1.5rem;
+  }
+  
+  .setup-phase h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .enemy-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .enemy-card {
+    padding: 0.75rem;
+    
+    .enemy-name {
+      font-size: 1.1rem;
+    }
+    
+    .enemy-stats {
+      font-size: 0.8rem;
+      gap: 0.5rem;
+    }
+  }
+  
+  .btn-start {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .hp-overlay {
+    padding: 0.3rem;
+    gap: 0.25rem;
+  }
+  
+  .hp-section {
+    padding: 0.3rem 0.5rem;
+    min-width: 80px;
+  }
+  
+  .hp-name {
+    font-size: 0.75rem;
+  }
+  
+  .hp-bar-container {
+    height: 8px;
+  }
+  
+  .hp-text {
+    font-size: 0.65rem;
+  }
+  
+  .round-indicator {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .combat-controls {
+    padding: 0.5rem;
+  }
+  
+  .turn-indicator {
+    font-size: 1rem;
+    padding: 0.3rem;
+  }
+  
+  .action-section h3 {
+    font-size: 0.85rem;
+  }
+  
+  .action-buttons {
+    gap: 0.4rem;
+    
+    &.spells {
+      max-height: 100px;
+    }
+  }
+  
+  .action-btn {
+    padding: 0.4rem 0.6rem;
+    min-width: 100px;
+    
+    .action-name {
+      font-size: 0.8rem;
+    }
+    
+    .action-detail {
+      font-size: 0.65rem;
+    }
+  }
+  
+  .result-screen {
+    padding: 1rem;
+    
+    h2 {
+      font-size: 1.6rem;
+    }
+    
+    p {
+      font-size: 1rem;
+    }
+  }
+  
+  .combat-log {
+    max-height: 120px;
+    padding: 0.5rem;
+    
+    h3 {
+      font-size: 0.8rem;
+    }
+    
+    .log-entries {
+      font-size: 0.7rem;
+    }
+  }
+}
+
+// ========== RESPONSIVE - SMALL MOBILE ==========
+@media (max-width: 480px) {
+  .setup-phase h2 {
+    font-size: 1.3rem;
+  }
+  
+  .enemy-card {
+    .enemy-header {
+      flex-wrap: wrap;
+    }
+    
+    .enemy-name {
+      font-size: 1rem;
+      flex-basis: calc(100% - 90px);
+    }
+  }
+  
+  .hp-section {
+    min-width: 70px;
+  }
+  
+  .hp-name {
+    font-size: 0.7rem;
+  }
+  
+  .action-btn {
+    min-width: 90px;
+    padding: 0.35rem 0.5rem;
+    
+    .action-name {
+      font-size: 0.75rem;
+    }
+  }
+  
+  .result-screen h2 {
+    font-size: 1.4rem;
   }
 }

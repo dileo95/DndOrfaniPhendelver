@@ -177,6 +177,12 @@ export class CombatGame implements OnInit, OnDestroy {
     
     const self = this;
     
+    // Calculate responsive size
+    const containerWidth = container.clientWidth || 600;
+    const isMobile = containerWidth < 500;
+    const gameWidth = Math.min(600, containerWidth);
+    const gameHeight = isMobile ? Math.min(350, gameWidth * 0.65) : 400;
+    
     class CombatScene extends Phaser.Scene {
       private playerSprite!: Phaser.GameObjects.Sprite;
       private enemyContainer!: Phaser.GameObjects.Container;
@@ -184,11 +190,13 @@ export class CombatGame implements OnInit, OnDestroy {
       private character: string;
       private enemyData: Enemy;
       private breathingTween: any;
+      private isMobile: boolean;
       
       constructor() {
         super({ key: 'CombatScene' });
         this.character = self.character();
         this.enemyData = self.selectedEnemy()!;
+        this.isMobile = isMobile;
       }
       
       preload() {
@@ -197,10 +205,32 @@ export class CombatGame implements OnInit, OnDestroy {
         scene.load.audio('bgMusic', './assets/sound/combat-music.WAV');
         
         const charPath = `./assets/spritesheet/${this.character}_animation/standard`;
-        scene.load.spritesheet('player_idle', `${charPath}/combat_idle.png`, { frameWidth: 64, frameHeight: 64 });
-        scene.load.spritesheet('player_attack', `${charPath}/halfslash.png`, { frameWidth: 64, frameHeight: 64 });
-        scene.load.spritesheet('player_spell', `${charPath}/spellcast.png`, { frameWidth: 64, frameHeight: 64 });
-        scene.load.spritesheet('player_hurt', `${charPath}/hurt.png`, { frameWidth: 64, frameHeight: 64 });
+        
+        // Load spritesheets with explicit frame dimensions for Safari compatibility
+        scene.load.spritesheet('player_idle', `${charPath}/combat_idle.png`, { 
+          frameWidth: 64, 
+          frameHeight: 64,
+          margin: 0,
+          spacing: 0
+        });
+        scene.load.spritesheet('player_attack', `${charPath}/halfslash.png`, { 
+          frameWidth: 64, 
+          frameHeight: 64,
+          margin: 0,
+          spacing: 0
+        });
+        scene.load.spritesheet('player_spell', `${charPath}/spellcast.png`, { 
+          frameWidth: 64, 
+          frameHeight: 64,
+          margin: 0,
+          spacing: 0
+        });
+        scene.load.spritesheet('player_hurt', `${charPath}/hurt.png`, { 
+          frameWidth: 64, 
+          frameHeight: 64,
+          margin: 0,
+          spacing: 0
+        });
       }
       
       create() {
@@ -211,19 +241,26 @@ export class CombatGame implements OnInit, OnDestroy {
         const bg = scene.add.image(width / 2, height / 2, 'fightScene');
         bg.setDisplaySize(width, height);
         
-        // Music
-        this.bgMusic = scene.sound.add('bgMusic', { volume: 0.3, loop: true });
-        (this.bgMusic as any).play();
+        // Music - with error handling for mobile
+        try {
+          this.bgMusic = scene.sound.add('bgMusic', { volume: 0.3, loop: true });
+          // Only autoplay on non-mobile or after user interaction
+          if (!this.isMobile) {
+            (this.bgMusic as any).play();
+          }
+        } catch (e) {
+          console.log('Audio not available');
+        }
         
-        // Player sprite
-        this.playerSprite = scene.add.sprite(150, height / 2, 'player_idle');
-        this.playerSprite.setScale(2.5);
+        // Player sprite - scale based on screen size
+        const playerScale = this.isMobile ? 2.0 : 2.5;
+        const playerX = this.isMobile ? width * 0.2 : 150;
+        this.playerSprite = scene.add.sprite(playerX, height / 2, 'player_idle');
+        this.playerSprite.setScale(playerScale);
         
-        // Animations
-        scene.anims.create({ key: 'idle', frames: scene.anims.generateFrameNumbers('player_idle', { start: 6, end: 7 }), frameRate: 6, repeat: -1 });
-        scene.anims.create({ key: 'attack', frames: scene.anims.generateFrameNumbers('player_attack', { start: 18, end: 23 }), frameRate: 12, repeat: 0 });
-        scene.anims.create({ key: 'spell', frames: scene.anims.generateFrameNumbers('player_spell', { start: 21, end: 27 }), frameRate: 10, repeat: 0 });
-        scene.anims.create({ key: 'hurt', frames: scene.anims.generateFrameNumbers('player_hurt', { start: 0, end: 5 }), frameRate: 10, repeat: 0 });
+        // Create animations with explicit frame arrays for Safari iOS compatibility
+        // Safari has issues with generateFrameNumbers in some cases
+        this.createSafariCompatibleAnimations(scene);
         
         this.playerSprite.play('idle');
         
@@ -232,12 +269,97 @@ export class CombatGame implements OnInit, OnDestroy {
         
         // Store reference
         self.scene = this;
+        
+        // Enable audio on first touch for mobile
+        if (this.isMobile) {
+          scene.input.once('pointerdown', () => {
+            if (this.bgMusic && !(this.bgMusic as any).isPlaying) {
+              try {
+                (this.bgMusic as any).play();
+              } catch (e) {
+                console.log('Could not play audio');
+              }
+            }
+          });
+        }
+      }
+      
+      // Safari-compatible animation creation
+      createSafariCompatibleAnimations(scene: any) {
+        // Use explicit frame arrays instead of generateFrameNumbers
+        // This is more compatible with Safari iOS
+        
+        // Idle animation - frames 6-7
+        if (!scene.anims.exists('idle')) {
+          scene.anims.create({ 
+            key: 'idle', 
+            frames: [
+              { key: 'player_idle', frame: 6 },
+              { key: 'player_idle', frame: 7 }
+            ], 
+            frameRate: 6, 
+            repeat: -1 
+          });
+        }
+        
+        // Attack animation - frames 18-23
+        if (!scene.anims.exists('attack')) {
+          scene.anims.create({ 
+            key: 'attack', 
+            frames: [
+              { key: 'player_attack', frame: 18 },
+              { key: 'player_attack', frame: 19 },
+              { key: 'player_attack', frame: 20 },
+              { key: 'player_attack', frame: 21 },
+              { key: 'player_attack', frame: 22 },
+              { key: 'player_attack', frame: 23 }
+            ], 
+            frameRate: 12, 
+            repeat: 0 
+          });
+        }
+        
+        // Spell animation - frames 21-27
+        if (!scene.anims.exists('spell')) {
+          scene.anims.create({ 
+            key: 'spell', 
+            frames: [
+              { key: 'player_spell', frame: 21 },
+              { key: 'player_spell', frame: 22 },
+              { key: 'player_spell', frame: 23 },
+              { key: 'player_spell', frame: 24 },
+              { key: 'player_spell', frame: 25 },
+              { key: 'player_spell', frame: 26 },
+              { key: 'player_spell', frame: 27 }
+            ], 
+            frameRate: 10, 
+            repeat: 0 
+          });
+        }
+        
+        // Hurt animation - frames 0-5
+        if (!scene.anims.exists('hurt')) {
+          scene.anims.create({ 
+            key: 'hurt', 
+            frames: [
+              { key: 'player_hurt', frame: 0 },
+              { key: 'player_hurt', frame: 1 },
+              { key: 'player_hurt', frame: 2 },
+              { key: 'player_hurt', frame: 3 },
+              { key: 'player_hurt', frame: 4 },
+              { key: 'player_hurt', frame: 5 }
+            ], 
+            frameRate: 10, 
+            repeat: 0 
+          });
+        }
       }
       
       createEnemy(scene: any, width: number, height: number) {
         const enemy = this.enemyData;
-        const baseSize = 60 * enemy.size;
-        const x = width - 120;
+        const sizeMultiplier = this.isMobile ? 0.7 : 1;
+        const baseSize = 60 * enemy.size * sizeMultiplier;
+        const x = this.isMobile ? width * 0.8 : width - 120;
         const y = height / 2;
         
         this.enemyContainer = scene.add.container(x, y);
@@ -728,11 +850,19 @@ export class CombatGame implements OnInit, OnDestroy {
     
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: 600,
-      height: 400,
+      width: gameWidth,
+      height: gameHeight,
       parent: container,
       backgroundColor: '#1a1a2e',
-      scene: CombatScene
+      scene: CombatScene,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
+      render: {
+        pixelArt: true,
+        antialias: false
+      }
     };
     
     this.game = new Phaser.Game(config);

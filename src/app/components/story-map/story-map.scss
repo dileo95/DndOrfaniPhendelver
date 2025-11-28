@@ -1,10 +1,18 @@
 @use '../../../styles.scss' as *;
 
+:host {
+  display: block;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
 .map-container {
   min-height: 100vh;
   padding: 1rem;
   padding-bottom: 4rem;
-  background: linear-gradient(135deg, rgba(30, 60, 114, 0.15), rgba(139, 69, 19, 0.15));
 
   .map-header {
     text-align: center;
