@@ -1414,3 +1414,277 @@
     font-size: 0.85rem;
   }
 }
+
+// ========== FOLDER SYSTEM ==========
+
+// Filtro cartella nei filtri
+.folder-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    color: #d4af37;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  select {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #8b4513;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+    cursor: pointer;
+    min-width: 150px;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #d4af37;
+    }
+  }
+}
+
+// Folder picker nel form
+.folder-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.folder-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &.selected {
+    background: rgba(212, 175, 55, 0.2);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+  }
+
+  .folder-icon {
+    font-size: 1.1rem;
+  }
+
+  .folder-name {
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+
+  .checkmark {
+    color: #27ae60;
+    font-weight: bold;
+    margin-left: 0.25rem;
+  }
+}
+
+// Vista cartelle
+.folders-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.folder-section {
+  background: rgba(44, 24, 16, 0.6);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &.empty {
+    opacity: 0.7;
+  }
+}
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: rgba(44, 24, 16, 0.8);
+  border-bottom: 2px solid;
+  cursor: pointer;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: rgba(74, 47, 31, 0.9);
+  }
+
+  .folder-expand-icon {
+    color: #d4af37;
+    font-size: 0.8rem;
+    width: 16px;
+  }
+
+  .folder-icon {
+    font-size: 1.5rem;
+  }
+
+  .folder-title {
+    flex: 1;
+    font-family: myFirstFont, serif;
+    color: #d4af37;
+    font-size: 1.3rem;
+  }
+
+  .folder-count {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: bold;
+    min-width: 28px;
+    text-align: center;
+  }
+}
+
+.folder-content {
+  padding: 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.folder-empty {
+  text-align: center;
+  padding: 1.5rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.folder-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+// Card compatta per folder view
+.note-card.compact {
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(44, 24, 16, 0.9), rgba(74, 47, 31, 0.9));
+  background-image: url('../../../assets/img/pergamena.png');
+  background-size: cover;
+  border: 2px solid;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+
+  .color-stripe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .pin-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 0.85rem;
+  }
+
+  .note-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+
+    h3 {
+      font-family: myFirstFont, serif;
+      color: #d4af37;
+      font-size: 1.1rem;
+      margin: 0;
+      flex: 1;
+      padding-right: 0.5rem;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 0.25rem;
+
+      .btn-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .note-content-preview {
+    color: #000;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    max-height: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .note-tags.compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      background: rgba(212, 175, 55, 0.2);
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      border-radius: 10px;
+      color: #d4af37;
+
+      &.more {
+        background: rgba(255, 255, 255, 0.1);
+        border-style: dashed;
+      }
+    }
+  }
+}
+
+// Responsive per cartelle
+@media (max-width: 768px) {
+  .folder-picker {
+    flex-direction: column;
+
+    .folder-option {
+      justify-content: flex-start;
+    }
+  }
+
+  .folder-notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .folder-header {
+    padding: 0.75rem 1rem;
+
+    .folder-title {
+      font-size: 1.1rem;
+    }
+  }
+}

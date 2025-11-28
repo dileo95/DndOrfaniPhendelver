@@ -53,7 +53,27 @@
           title="Vista lista">
           ☰
         </button>
+        <button 
+          class="view-btn" 
+          [class.active]="viewMode() === 'folders'"
+          (click)="viewMode.set('folders')"
+          title="Vista cartelle">
+          📁
+        </button>
       </div>
+
+      <!-- Filtro Cartella (solo in grid/list view) -->
+      @if (viewMode() !== 'folders') {
+        <div class="folder-filter">
+          <label>Cartella:</label>
+          <select [(ngModel)]="selectedFolder">
+            <option value="">Tutte</option>
+            @for (folder of folders(); track folder.id) {
+              <option [value]="folder.id">{{ folder.icon }} {{ folder.name }}</option>
+            }
+          </select>
+        </div>
+      }
 
       <!-- Ordinamento -->
       <div class="sort-select">
@@ -225,6 +245,27 @@ Supporta Markdown:
             class="form-input">
         </div>
 
+        <!-- Selettore Cartella -->
+        <div class="form-group">
+          <label>📁 Cartella</label>
+          <div class="folder-picker">
+            @for (folder of folders(); track folder.id) {
+              <button 
+                type="button"
+                class="folder-option"
+                [class.selected]="noteFolderId() === folder.id"
+                [style.borderColor]="folder.color"
+                (click)="noteFolderId.set(folder.id)">
+                <span class="folder-icon">{{ folder.icon }}</span>
+                <span class="folder-name">{{ folder.name }}</span>
+                @if (noteFolderId() === folder.id) {
+                  <span class="checkmark">✓</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Colore</label>
           <div class="color-picker">
@@ -315,8 +356,69 @@ Supporta Markdown:
     </div>
   }
 
-  <!-- Lista Note -->
-  <div class="notes-grid" [class.list-view]="viewMode() === 'list'">
+  <!-- VISTA CARTELLE -->
+  @if (viewMode() === 'folders') {
+    <div class="folders-view">
+      @for (folder of folders(); track folder.id) {
+        <div class="folder-section" [class.empty]="getNotesInFolder(folder.id).length === 0">
+          <div 
+            class="folder-header" 
+            [style.borderColor]="folder.color"
+            (click)="toggleFolderExpand(folder.id)">
+            <span class="folder-expand-icon">{{ isFolderExpanded(folder.id) ? '▼' : '▶' }}</span>
+            <span class="folder-icon" [style.color]="folder.color">{{ folder.icon }}</span>
+            <span class="folder-title">{{ folder.name }}</span>
+            <span class="folder-count" [style.background]="folder.color">
+              {{ notesCountByFolder().get(folder.id) || 0 }}
+            </span>
+          </div>
+          
+          @if (isFolderExpanded(folder.id)) {
+            <div class="folder-content">
+              @if (getNotesInFolder(folder.id).length === 0) {
+                <div class="folder-empty">
+                  <span>Nessuna nota in questa cartella</span>
+                </div>
+              } @else {
+                <div class="folder-notes-grid">
+                  @for (note of getNotesInFolder(folder.id); track note.id) {
+                    <div 
+                      class="note-card compact"
+                      [style.borderColor]="getColorHex(note.color || 'gold')">
+                      <div class="color-stripe" [style.background]="getColorHex(note.color || 'gold')"></div>
+                      @if (note.pinned) {
+                        <div class="pin-badge">📌</div>
+                      }
+                      <div class="note-card-header">
+                        <h3>{{ note.title }}</h3>
+                        <div class="note-actions">
+                          <button class="btn-icon" (click)="openEditForm(note)" title="Modifica">✏️</button>
+                          <button class="btn-icon" (click)="deleteNote(note)" title="Elimina">🗑️</button>
+                        </div>
+                      </div>
+                      <div class="note-content-preview" [innerHTML]="parseMarkdown(getPreviewContent(note.content))"></div>
+                      @if (note.tags && note.tags.length > 0) {
+                        <div class="note-tags compact">
+                          @for (tag of note.tags.slice(0, 3); track tag) {
+                            <span class="tag">{{ tag }}</span>
+                          }
+                          @if (note.tags.length > 3) {
+                            <span class="tag more">+{{ note.tags.length - 3 }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- VISTA GRIGLIA/LISTA NORMALE -->
+    <div class="notes-grid" [class.list-view]="viewMode() === 'list'">
     @if (filteredNotes().length === 0) {
       <div class="empty-state">
         @if (searchQuery() || selectedTags().length > 0) {
@@ -442,6 +544,7 @@ Supporta Markdown:
       </div>
     }
   </div>
+  }
 
   <!-- Entity Preview Modal -->
   @if (selectedEntityPreview()) {

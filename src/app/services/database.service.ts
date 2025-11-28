@@ -1,6 +1,24 @@
 import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
 
+// Cartelle predefinite per le note
+export const DEFAULT_FOLDERS = [
+  { id: 'general', name: 'Generale', icon: '📋', color: '#d4af37' },
+  { id: 'quests', name: 'Missioni', icon: '🗡️', color: '#e74c3c' },
+  { id: 'npcs', name: 'PNG', icon: '🧑', color: '#27ae60' },
+  { id: 'locations', name: 'Luoghi', icon: '📍', color: '#3498db' },
+  { id: 'clues', name: 'Teorie/Indizi', icon: '💡', color: '#f39c12' },
+  { id: 'archive', name: 'Archivio', icon: '📦', color: '#7f8c8d' }
+];
+
+export interface NoteFolder {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  isCustom?: boolean;
+}
+
 // Interfaces
 export interface PlayerNote {
   id?: number;
@@ -13,6 +31,7 @@ export interface PlayerNote {
   pinned?: boolean;
   color?: string; // gold, red, blue, green, purple, orange
   linkedEntities?: string[]; // IDs delle entità della story-map collegate
+  folderId?: string; // ID della cartella (default: 'general')
 }
 
 // Classe singola (per multiclasse)

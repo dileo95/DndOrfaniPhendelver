@@ -2,11 +2,11 @@ import { Component, OnInit, signal, computed, ViewChild, ElementRef, HostListene
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DatabaseService, PlayerNote } from '../../services/database.service';
+import { DatabaseService, PlayerNote, DEFAULT_FOLDERS, NoteFolder } from '../../services/database.service';
 import { StoryParserService, StoryEntity } from '../../services/story-parser.service';
 
 type SortOption = 'newest' | 'oldest' | 'alphabetical';
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'folders';
 
 // Colori disponibili per le note
 export const NOTE_COLORS = [
@@ -37,6 +37,11 @@ export class PlayerNotes implements OnInit {
   selectedColor = signal<string>('');
   sortBy = signal<SortOption>('newest');
   
+  // Cartelle
+  folders = signal<NoteFolder[]>(DEFAULT_FOLDERS);
+  selectedFolder = signal<string>(''); // vuoto = tutte
+  expandedFolders = signal<Set<string>>(new Set(['general', 'quests', 'npcs', 'locations', 'clues']));
+  
   // Form per nuova nota
   showForm = signal(false);
   editingNote = signal<PlayerNote | null>(null);
@@ -44,6 +49,7 @@ export class PlayerNotes implements OnInit {
   noteContent = signal('');
   noteTags = signal('');
   noteColor = signal('gold');
+  noteFolderId = signal('general');
   showPreview = signal(false);
   
   // Link entità story-map
@@ -139,6 +145,12 @@ export class PlayerNotes implements OnInit {
     if (selectedColor) {
       result = result.filter(note => note.color === selectedColor);
     }
+
+    // Filtro per cartella (solo se non siamo in folder view)
+    const selectedFolder = this.selectedFolder();
+    if (selectedFolder && this.viewMode() !== 'folders') {
+      result = result.filter(note => (note.folderId || 'general') === selectedFolder);
+    }
     
     // Ordinamento
     const sortOption = this.sortBy();
@@ -161,6 +173,37 @@ export class PlayerNotes implements OnInit {
     });
     
     return result;
+  });
+
+  // Computed: note raggruppate per cartella (per folder view)
+  notesByFolder = computed(() => {
+    const result: Map<string, PlayerNote[]> = new Map();
+    const allNotes = this.filteredNotes();
+    
+    // Inizializza tutte le cartelle
+    this.folders().forEach(folder => {
+      result.set(folder.id, []);
+    });
+    
+    // Raggruppa le note
+    allNotes.forEach(note => {
+      const folderId = note.folderId || 'general';
+      const folderNotes = result.get(folderId) || [];
+      folderNotes.push(note);
+      result.set(folderId, folderNotes);
+    });
+    
+    return result;
+  });
+
+  // Computed: conta note per cartella
+  notesCountByFolder = computed(() => {
+    const counts: Map<string, number> = new Map();
+    this.notes().forEach(note => {
+      const folderId = note.folderId || 'general';
+      counts.set(folderId, (counts.get(folderId) || 0) + 1);
+    });
+    return counts;
   });
 
   constructor(
@@ -187,6 +230,7 @@ export class PlayerNotes implements OnInit {
     this.noteContent.set('');
     this.noteTags.set('');
     this.noteColor.set('gold');
+    this.noteFolderId.set(this.selectedFolder() || 'general');
     this.noteLinkedEntities.set([]);
     this.entitySearchQuery.set('');
     this.showEntitySelector.set(false);
@@ -199,6 +243,7 @@ export class PlayerNotes implements OnInit {
     this.noteContent.set(note.content);
     this.noteTags.set(note.tags?.join(', ') || '');
     this.noteColor.set(note.color || 'gold');
+    this.noteFolderId.set(note.folderId || 'general');
     this.noteLinkedEntities.set(note.linkedEntities || []);
     this.entitySearchQuery.set('');
     this.showEntitySelector.set(false);
@@ -219,6 +264,7 @@ export class PlayerNotes implements OnInit {
       .filter(t => t.length > 0);
 
     const color = this.noteColor();
+    const folderId = this.noteFolderId();
     const linkedEntities = this.noteLinkedEntities();
 
     if (this.editingNote()) {
@@ -228,6 +274,7 @@ export class PlayerNotes implements OnInit {
         content,
         tags,
         color,
+        folderId,
         linkedEntities
       });
     } else {
@@ -238,6 +285,7 @@ export class PlayerNotes implements OnInit {
         content,
         tags,
         color,
+        folderId,
         pinned: false,
         linkedEntities
       });
@@ -545,6 +593,43 @@ export class PlayerNotes implements OnInit {
 
   closeEntityPreview() {
     this.selectedEntityPreview.set(null);
+  }
+
+  // ========== FOLDER MANAGEMENT ==========
+  
+  getFolderById(folderId: string): NoteFolder | undefined {
+    return this.folders().find(f => f.id === folderId);
+  }
+
+  toggleFolderExpand(folderId: string) {
+    const expanded = new Set(this.expandedFolders());
+    if (expanded.has(folderId)) {
+      expanded.delete(folderId);
+    } else {
+      expanded.add(folderId);
+    }
+    this.expandedFolders.set(expanded);
+  }
+
+  isFolderExpanded(folderId: string): boolean {
+    return this.expandedFolders().has(folderId);
+  }
+
+  selectFolder(folderId: string) {
+    if (this.selectedFolder() === folderId) {
+      this.selectedFolder.set(''); // Deseleziona se già selezionato
+    } else {
+      this.selectedFolder.set(folderId);
+    }
+  }
+
+  async moveNoteToFolder(note: PlayerNote, folderId: string) {
+    await this.db.updateNote(note.id!, { folderId });
+    await this.loadNotes();
+  }
+
+  getNotesInFolder(folderId: string): PlayerNote[] {
+    return this.notesByFolder().get(folderId) || [];
   }
 
   goBack() {
