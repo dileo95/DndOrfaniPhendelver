@@ -18,10 +18,6 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
-    path: 'diary/gallery',
-    renderMode: RenderMode.Prerender
-  },
-  {
     path: 'diary/artbook',
     renderMode: RenderMode.Prerender
   },

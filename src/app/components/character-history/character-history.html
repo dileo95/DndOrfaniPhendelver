@@ -17,3 +17,9 @@
     <div [innerHTML]="storyContent"></div>
   </div>
 </div>
+
+<!-- Entity Preview Modal -->
+<app-entity-preview-modal 
+  [entity]="entityHighlight.selectedEntity()" 
+  (close)="closeEntityPreview()" 
+/>

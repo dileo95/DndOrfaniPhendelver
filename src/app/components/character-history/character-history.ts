@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { EntityHighlightService } from '../../services/entity-highlight.service';
+import { EntityPreviewModal } from '../shared/entity-preview-modal/entity-preview-modal';
 
 interface CharacterHistoryConfig {
   name: string;
@@ -10,7 +12,7 @@ interface CharacterHistoryConfig {
 
 @Component({
   selector: 'app-character-history',
-  imports: [],
+  imports: [EntityPreviewModal],
   templateUrl: './character-history.html',
   styleUrl: './character-history.scss',
 })
@@ -46,7 +48,8 @@ export class CharacterHistory implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    protected entityHighlight: EntityHighlightService
   ) {}
 
   ngOnInit(): void {
@@ -56,7 +59,9 @@ export class CharacterHistory implements OnInit, OnDestroy {
     if (config) {
       this.characterName = config.name;
       this.backgroundColor = config.backgroundColor;
-      this.storyContent = this.sanitizer.bypassSecurityTrustHtml(config.story);
+      // Processa il contenuto per aggiungere i link alle entità
+      const processedContent = this.entityHighlight.processContent(config.story);
+      this.storyContent = this.sanitizer.bypassSecurityTrustHtml(processedContent);
     }
 
     // Abilita lo scroll rimuovendo le classi e gli stili che lo bloccano
@@ -78,6 +83,10 @@ export class CharacterHistory implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate([this.characterRoute, 'home']);
+  }
+
+  closeEntityPreview(): void {
+    this.entityHighlight.closeEntityPreview();
   }
 
   private getAsrielStory(): string {

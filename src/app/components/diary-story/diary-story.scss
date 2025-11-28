@@ -7,11 +7,9 @@
 // Gli stili per header sono definiti in style.css globale
 
 .back {
-  left: 10px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 5px;
 }
 
 .content-wrapper {
@@ -20,40 +18,76 @@
   min-height: 100vh;
 }
 
-.story-section {
-  background: url('../../../assets/img/pergamena.png');
-  background-size: cover;
-  border: 1px solid black;
-  padding: 15px;
-  position: relative;
-  color: #000000;
-  
-  p, ul, ol, li {
-    color: #000000;
-    padding-left: 6px;
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    height: 20px;
-    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../../../assets/img/pergamena.png');
-    border-radius: 10px;
-    border: 2px solid black;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: -10px;
-    right: -10px;
-    height: 20px;
-    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../../../assets/img/pergamena.png');
-    border-radius: 10px;
-    border: 2px solid black;
+// Stili per il container - usa ::ng-deep per penetrare nel contenuto innerHTML
+.story-container ::ng-deep {
+  .story-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border: 2px solid rgba(212, 175, 55, 0.5);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    color: #e8e8e8;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    h1, h2, h3 {
+      color: #d4af37;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      margin-bottom: 1rem;
+    }
+    
+    p, ul, ol, li {
+      color: #e8e8e8;
+      padding-left: 6px;
+      line-height: 1.7;
+    }
+
+    // Immagini portrait con max-width (sovrascrive stili inline)
+    img {
+      max-width: 130px !important;
+      width: auto !important;
+      height: auto !important;
+      border: 2px solid rgba(212, 175, 55, 0.5) !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    // Immagini grandi (diary, mappe) - escludile dal max-width
+    img[style*="width: 100%"] {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    // Link entità
+    .story-entity-link {
+      font-weight: 600;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        filter: brightness(1.2);
+      }
+    }
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      height: 20px;
+      background: linear-gradient(135deg, #0f3460, #1a1a2e);
+      border-radius: 10px;
+      border: 2px solid rgba(212, 175, 55, 0.5);
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: -10px;
+      right: -10px;
+      height: 20px;
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      border-radius: 10px;
+      border: 2px solid rgba(212, 175, 55, 0.5);
+    }
   }
 }

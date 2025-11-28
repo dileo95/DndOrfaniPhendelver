@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { EntityHighlightService } from '../../services/entity-highlight.service';
+import { EntityPreviewModal } from '../shared/entity-preview-modal/entity-preview-modal';
 
 @Component({
   selector: 'app-diary-previous',
-  imports: [],
+  imports: [EntityPreviewModal],
   templateUrl: './diary-previous.html',
   styleUrl: './diary-previous.scss'
 })
@@ -13,13 +15,21 @@ export class DiaryPrevious {
 
   constructor(
     private router: Router,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    protected entityHighlight: EntityHighlightService
   ) {
-    this.storyContent = this.sanitizer.bypassSecurityTrustHtml(this.getContent());
+    // Processa il contenuto per aggiungere i link alle entità
+    const rawContent = this.getContent();
+    const processedContent = this.entityHighlight.processContent(rawContent);
+    this.storyContent = this.sanitizer.bypassSecurityTrustHtml(processedContent);
   }
 
   goBack(): void {
     this.router.navigate(['/diary']);
+  }
+
+  closeEntityPreview(): void {
+    this.entityHighlight.closeEntityPreview();
   }
 
   private getContent(): string {

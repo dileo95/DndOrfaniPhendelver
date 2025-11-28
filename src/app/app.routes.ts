@@ -7,7 +7,6 @@ import { CharacterDice } from './components/character-dice/character-dice';
 import { Diary } from './components/diary/diary';
 import { DiaryPrevious } from './components/diary-previous/diary-previous';
 import { DiaryStory } from './components/diary-story/diary-story';
-import { Gallery } from './components/gallery/gallery';
 import { GalleryArtbook } from './components/gallery-artbook/gallery-artbook';
 import { Cracks } from './components/cracks/cracks';
 import { PlayerNotes } from './components/player-notes/player-notes';
@@ -69,10 +68,6 @@ export const routes: Routes = [
   {
     path: 'diary/story',
     component: DiaryStory
-  },
-  {
-    path: 'diary/gallery',
-    component: Gallery
   },
   {
     path: 'diary/artbook',

@@ -1,0 +1,37 @@
+@if (entity()) {
+  <div class="entity-preview-overlay" (click)="onOverlayClick($event)">
+    <div class="entity-preview-modal" [style.border-color]="entityColor()">
+      <div class="entity-preview-header">
+        <span class="preview-icon" [style.color]="entityColor()">{{ entityIcon() }}</span>
+        <h3>{{ entity()!.name }}</h3>
+        <button class="btn-close-preview" (click)="onClose()">✕</button>
+      </div>
+      
+      <div class="entity-preview-body">
+        @if (entity()!.image) {
+          <img [src]="entity()!.image" [alt]="entity()!.name" class="entity-preview-image">
+        }
+        
+        <p class="entity-description">{{ entity()!.description }}</p>
+        
+        <div class="entity-meta">
+          <span class="entity-type-badge" [style.background-color]="entityColor()">
+            {{ entityTypeLabel() }}
+          </span>
+          <span class="entity-chapter">📖 {{ chapterLabel() }}</span>
+        </div>
+        
+        @if (entity()!.importance) {
+          <div class="entity-importance">
+            <span class="importance-label">Importanza:</span>
+            <span class="importance-stars">
+              @for (star of [1, 2, 3]; track star) {
+                <span class="star" [class.filled]="star <= entity()!.importance">★</span>
+              }
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

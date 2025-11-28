@@ -1,6 +1,32 @@
-// Gli stili per header, back e diary-button sono definiti in style.css globale
-// Non sovrascriviamo per mantenere l'aspetto originale con pergamena
+// Stili per i bottoni del diary
+.diary-button {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+  border: 2px solid rgba(212, 175, 55, 0.6) !important;
+  border-radius: 12px !important;
+  color: #e8e8e8 !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  padding: 1rem 1.5rem !important;
+  margin: 0.5rem 0 !important;
+  width: 100% !important;
+  text-align: left !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
 
+  &:hover {
+    background: linear-gradient(135deg, #16213e 0%, #1a1a2e 50%, #0f3460 100%) !important;
+    border-color: #d4af37 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(212, 175, 55, 0.2) !important;
+  }
+
+  &:active {
+    transform: translateY(0) !important;
+  }
+}
+
+// Personaggi in sviluppo - stile speciale con immagine
 .auryn-button {
   background: url('../../../assets/img/auryn-face.png') !important;
   background-size: contain !important;
@@ -13,6 +39,11 @@
   opacity: 0.6;
   cursor: not-allowed !important;
   color: white !important;
+
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
 }
 
 .ravel-button {
@@ -27,4 +58,9 @@
   opacity: 0.6;
   cursor: not-allowed !important;
   color: white !important;
+
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
 }
