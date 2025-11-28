@@ -1,6 +1,15 @@
 /* Character Home styles */
 // Gli stili per header sono definiti in style.css globale
 
+:host {
+  display: block;
+  min-height: 100vh;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  box-sizing: border-box;
+  color: #e8e8e8;
+}
+
 .back {
   background: transparent;
   border: none;

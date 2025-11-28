@@ -11,23 +11,217 @@
   </button>
 </div>
 
-<div style="text-align: center; margin-bottom: 30px; margin-top: 60px;">
-  Modificatore<br>
-  <input type="number" min="0" max="9" [(ngModel)]="modifier" id="modifier">
+<!-- Selettore tipo di dado -->
+<div class="dice-selector">
+  @for (dice of diceOptions; track dice.sides) {
+    <button 
+      class="dice-option" 
+      [class.selected]="selectedDice() === dice.sides"
+      (click)="selectDice(dice.sides)">
+      <span class="dice-icon">{{ dice.icon }}</span>
+      <span class="dice-label">{{ dice.label }}</span>
+    </button>
+  }
 </div>
 
-<div class="content">
-  <div class="die" 
-       [class.rolling]="isRolling()" 
-       [attr.data-face]="currentFace()">
-    @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
-      <figure class="face face-{{ i }}"></figure>
+<!-- Presets azioni rapide -->
+<div class="presets-section">
+  <div class="presets-label">Azioni Rapide</div>
+  <div class="presets-grid">
+    @for (preset of actionPresets; track preset.name) {
+      <button 
+        class="preset-btn" 
+        [disabled]="isRolling()"
+        (click)="executePreset(preset)"
+        [title]="preset.description">
+        <span class="preset-icon">{{ preset.icon }}</span>
+        <span class="preset-name">{{ preset.name }}</span>
+        <span class="preset-dice">{{ getDiceLabel(preset.dice) }}</span>
+      </button>
     }
   </div>
 </div>
 
-<p style="text-align: center;">
-  <a href="" class="randomize" (click)="rollDice(); $event.preventDefault()">Lancia!</a> 
-</p>
+<!-- Sezione Dice Pool (Tiri Multipli) -->
+<div class="dice-pool-section">
+  <div class="pool-header">
+    <span class="pool-label">🎯 Tiro Multiplo</span>
+    @if (hasPool()) {
+      <button class="clear-pool-btn" (click)="clearPool()">✕ Svuota</button>
+    }
+  </div>
+  
+  <div class="pool-builder">
+    @for (dice of diceOptions; track dice.sides) {
+      <div class="pool-dice-control">
+        <button 
+          class="pool-btn minus" 
+          [disabled]="getDiceCountInPool(dice.sides) === 0"
+          (click)="removeFromPool(dice.sides)">
+          −
+        </button>
+        <span class="pool-count" [class.has-dice]="getDiceCountInPool(dice.sides) > 0">
+          {{ getDiceCountInPool(dice.sides) }}{{ dice.label }}
+        </span>
+        <button 
+          class="pool-btn plus"
+          (click)="addToPool(dice.sides)">
+          +
+        </button>
+      </div>
+    }
+  </div>
+  
+  @if (hasPool()) {
+    <div class="pool-formula">
+      <span class="formula-label">Formula:</span>
+      <span class="formula-value">{{ poolFormula() }}</span>
+      @if (modifier !== 0) {
+        <span class="formula-modifier">
+          {{ modifier >= 0 ? '+' : '' }}{{ modifier }}
+        </span>
+      }
+    </div>
+    
+    <button 
+      class="roll-pool-btn" 
+      [disabled]="isRolling()"
+      (click)="rollPool()">
+      🎲 Lancia {{ poolFormula() }}!
+    </button>
+  }
+  
+  @if (multiRollResult()) {
+    <div class="multi-roll-result">
+      <div class="pool-results">
+        @for (pool of multiRollResult()!.pools; track pool.dice) {
+          <div class="pool-result-group">
+            <span class="pool-result-label">{{ pool.rolls.length }}d{{ pool.dice }}:</span>
+            <span class="pool-result-rolls">
+              @for (roll of pool.rolls; track $index; let last = $last) {
+                <span class="individual-roll" 
+                      [class.max-roll]="roll === pool.dice"
+                      [class.min-roll]="roll === 1">{{ roll }}</span>{{ last ? '' : ' + ' }}
+              }
+            </span>
+            <span class="pool-result-subtotal">= {{ pool.subtotal }}</span>
+          </div>
+        }
+      </div>
+      <div class="pool-total">
+        <span class="pool-total-label">Totale:</span>
+        <span class="pool-total-value">{{ multiRollResult()!.total }}</span>
+        @if (modifier !== 0) {
+          <span class="pool-modifier-note">(incl. mod. {{ modifier >= 0 ? '+' : '' }}{{ modifier }})</span>
+        }
+      </div>
+    </div>
+  }
+</div>
 
-<h1 class="information" style="color: darkred; text-align: center;">{{ information() }}</h1>
+<div class="modifier-section">
+  <label>Modificatore</label>
+  <input type="number" min="-10" max="20" [(ngModel)]="modifier" id="modifier">
+  <button class="sound-toggle" (click)="toggleSound()" [class.muted]="!soundEnabled()">
+    {{ soundEnabled() ? '🔊' : '🔇' }}
+  </button>
+</div>
+
+<!-- Dado 3D solo per d20 -->
+@if (isD20()) {
+  <div class="content">
+    <div class="die" 
+         [class.rolling]="isRolling()" 
+         [attr.data-face]="currentFace()">
+      @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]; track i) {
+        <figure class="face face-{{ i }}"></figure>
+      }
+      <figure class="face face-20 face-icon"></figure>
+    </div>
+  </div>
+} @else {
+  <!-- Dado semplificato per altri dadi -->
+  <div class="simple-dice-container">
+    <div class="simple-dice" [class.rolling]="isRolling()">
+      @if (currentFace() !== null && !isRolling()) {
+        <span class="simple-dice-value">{{ currentFace() }}</span>
+      } @else if (isRolling()) {
+        <span class="simple-dice-value rolling-number">?</span>
+      } @else {
+        <span class="simple-dice-label">{{ getDiceLabel(selectedDice()) }}</span>
+      }
+    </div>
+  </div>
+}
+
+<div class="roll-buttons">
+  @if (isD20()) {
+    <button class="roll-btn advantage" (click)="rollWithAdvantage()" [disabled]="isRolling()">
+      ⬆️ Vantaggio
+    </button>
+  }
+  <button class="roll-btn normal" (click)="rollDice()" [disabled]="isRolling()">
+    🎲 Lancia {{ getDiceLabel(selectedDice()) }}!
+  </button>
+  @if (isD20()) {
+    <button class="roll-btn disadvantage" (click)="rollWithDisadvantage()" [disabled]="isRolling()">
+      ⬇️ Svantaggio
+    </button>
+  }
+</div>
+
+@if (currentFace() !== null) {
+  <div class="result-section">
+    @if (secondRoll() !== null) {
+      <div class="double-roll">
+        <span class="roll-value" [class.used]="isFirstRollUsed()">{{ firstRoll() }}</span>
+        <span class="roll-separator">|</span>
+        <span class="roll-value" [class.used]="!isFirstRollUsed()">{{ secondRoll() }}</span>
+      </div>
+    }
+    <div class="result-value" 
+         [class.critical-success]="currentFace() === selectedDice()"
+         [class.critical-fail]="currentFace() === 1">
+      {{ getTotal() }}
+    </div>
+    <div class="result-message">{{ information() }}</div>
+  </div>
+}
+
+<!-- Storico tiri -->
+@if (rollHistory().length > 0) {
+  <div class="history-section">
+    <div class="history-header">
+      <h3>📜 Storico Tiri</h3>
+      <button class="clear-history" (click)="clearHistory()">Cancella</button>
+    </div>
+    <div class="history-list">
+      @for (entry of rollHistory(); track entry.id) {
+        <div class="history-entry" 
+             [class.critical-success]="entry.isCriticalSuccess"
+             [class.critical-fail]="entry.isCriticalFail"
+             [class.multi-roll]="entry.multiRoll">
+          @if (entry.presetName) {
+            <span class="history-preset">{{ entry.presetName }}</span>
+          }
+          @if (entry.multiRoll) {
+            <span class="history-formula">{{ entry.multiRoll.formula }}</span>
+            <span class="history-equals">=</span>
+            <span class="history-total">{{ entry.multiRoll.total }}</span>
+          } @else {
+            <span class="history-dice">{{ getDiceLabel(entry.diceType) }}</span>
+            <span class="history-icon">{{ getTypeIcon(entry.type) }}</span>
+            <span class="history-face">{{ entry.face }}</span>
+            @if (entry.modifier !== 0) {
+              <span class="history-modifier">
+                {{ entry.modifier >= 0 ? '+' : '' }}{{ entry.modifier }}
+              </span>
+            }
+            <span class="history-equals">=</span>
+            <span class="history-total">{{ entry.total }}</span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -3,6 +3,15 @@
   src: url('/assets/font/Morris Roman.ttf');
 }
 
+:host {
+  display: block;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1a0f08 0%, #2c1810 50%, #1a0f08 100%);
+}
+
 .artbook-container {
   width: 100%;
   min-height: calc(100vh - 40px);
@@ -13,7 +22,6 @@
   padding: 50px 20px 20px;
   box-sizing: border-box;
   outline: none;
-  background: linear-gradient(135deg, #1a0f08 0%, #2c1810 50%, #1a0f08 100%);
 }
 
 .flipbook {
