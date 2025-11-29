@@ -28,10 +28,17 @@ Una Progressive Web App interattiva per la campagna D&D "Gli Orfani di Phendelve
 - **Artbook**: Sfoglia le illustrazioni con PageFlip.js
 - **Timeline Interattiva**: Visualizza eventi cronologici con D3.js
 - **Mappa Relazioni**: Grafo interattivo di personaggi ed eventi (D3.js force-directed)
+- **Bestiario**: Catalogo completo dei nemici con lore, statistiche e artwork
 
 ### 🎲 Altri Strumenti
 - **Dado Virtuale**: Roll 3D animati per tutti i dadi (d4, d6, d8, d10, d12, d20, d100)
 - **Carte Personaggio**: Visualizzazione stile trading card
+- **Comandi Vocali**: Controllo hands-free con Web Speech API (tira dadi, leggi HP, naviga)
+
+### 🐲 Sistema Draghi (Combat)
+- **20 Draghi Giocabili**: Wyrmling e Young di tutti i 10 tipi cromatici/metallici
+- **Breath Weapon**: Meccanica soffio con ricarica 5-6, tiro salvezza DEX
+- **Effetti Visivi**: Animazioni fuoco, fulmine, ghiaccio, acido, veleno
 
 ## 🚀 Quick Start
 
@@ -98,8 +105,10 @@ ng test
 - **D3.js** - Visualizzazioni interattive (timeline, grafo)
 - **Dexie.js** - Wrapper per IndexedDB
 - **PageFlip.js** - Effetto flip per l'artbook
+- **Web Speech API** - Comandi vocali e sintesi vocale
 - **Electron** - Build desktop app
 - **SCSS** - Styling avanzato
+- **PWA** - Progressive Web App con Service Worker
 
 ## 📁 Struttura Progetto
 
@@ -118,10 +127,17 @@ src/
 │   │   ├── story-map/          # Grafo interattivo
 │   │   ├── timeline/           # Timeline eventi
 │   │   ├── diary/              # Diario della campagna
-│   │   └── gallery-artbook/    # Artbook sfogliabile
+│   │   ├── gallery-artbook/    # Artbook sfogliabile
+│   │   ├── bestiary/           # Catalogo nemici con lore
+│   │   ├── voice-button/       # Pulsante comandi vocali
+│   │   ├── voice-help-modal/   # Tutorial comandi vocali
+│   │   ├── toast/              # Notifiche toast
+│   │   └── offline-indicator/  # Indicatore stato offline
 │   ├── services/
 │   │   ├── database.service.ts    # Gestione IndexedDB
 │   │   ├── story-parser.service.ts # Parser eventi/personaggi
+│   │   ├── toast.service.ts       # Gestione notifiche
+│   │   ├── voice.service.ts       # Riconoscimento vocale
 │   │   └── scroll.ts              # Controllo scroll
 │   └── guards/
 │       └── auth.guard.ts          # Protezione route con PIN
@@ -157,28 +173,31 @@ src/
 - [x] Combat: Sprite nemici stilizzati per tipo (humanoid/beast/undead/giant)
 - [x] Combat: Effetti visivi (slash, proiettili magici, scudo, heal)
 - [x] Combat: Animazioni breathing, morte, vittoria con confetti
+- [x] **Sistema di Riposo** - Short/Long rest per recuperare HP, spell slots, hit dice
+- [x] **Toast Notifications** - Sostituire alert() con notifiche eleganti
+- [x] **Statistiche Combat** - Riepilogo post-combattimento (danni inflitti/subiti, round)
+- [x] **Badge PWA** - Notifica nuove versioni con prompt aggiornamento
+- [x] **Lazy Loading** - Riduzione bundle iniziale dell'85% (~700KB vs ~4MB)
+- [x] **Indicatore Offline** - Mostra stato connessione nella PWA
+- [x] **Bestiario** - Pagina dedicata con 32 nemici, lore, statistiche e artwork
+- [x] **Draghi Combat** - 20 draghi (Wyrmling + Young) con breath weapon
+- [x] **Breath Weapon** - Meccanica soffio con cooldown, ricarica 5-6, DEX save
+- [x] **Effetti Breath** - Animazioni fuoco, fulmine, ghiaccio, acido, veleno
+- [x] **Comandi Vocali** - Sistema completo con 25+ comandi (dadi, HP, navigazione)
+- [x] **Voice Tutorial** - Modal aiuto con lista comandi per categoria
+- [x] **ServiceWorker gh-pages** - PWA funzionante su GitHub Pages
 
 ### 🚧 In Sviluppo
 - [ ] Visual Novel con Ink.js per narrazione interattiva
 - [ ] Sprite per Auryn e Ravel
 
-## 🎯 Roadmap / TODO
-
-### 🎯 Priorità Alta (Prossimi Step)
-- [x] **Sistema di Riposo** - Short/Long rest per recuperare HP, spell slots, hit dice
-- [x] **Toast Notifications** - Sostituire alert() con notifiche eleganti
-- [x] **Statistiche Combat** - Riepilogo post-combattimento (danni inflitti/subiti, round)
-
 ### 🟢 Quick Wins (Piccoli miglioramenti)
-- [x] Badge PWA per notifica nuove versioni
 - [ ] Storico dei tiri di dado nella sessione
-- [ ] Badge PWA sull'icona per notifiche
 - [ ] Migliorare keyboard navigation e accessibilità
 - [ ] Suoni effetti (attacchi, magie, hit, miss, vittoria)
 
 ### 🟡 Feature Medie
 - [ ] Inventario migliorato - Drag & drop, filtri, peso totale con encumbrance
-- [ ] Bestiary - Pagina dedicata con tutti i nemici, lore e statistiche
 - [ ] Achievements - Badge/trofei per traguardi (es. "Prima vittoria", "100 tiri")
 - [ ] Export/Import - Scheda personaggio in PDF o JSON
 - [ ] Difficoltà dinamica - suggerire nemici in base al livello PG
@@ -193,13 +212,10 @@ src/
 - [ ] Initiative Tracker - Gestione turni con più combattenti
 - [ ] Spell Effects - Applicare condizioni durante il combattimento
 - [ ] Campaign Journal - Timeline delle sessioni con date reali
-- [ ] Voice Commands - "Tira un d20" con Web Speech API
 - [ ] Sync Cloud - Sincronizzazione tra dispositivi (Firebase/Supabase)
 - [ ] Multiplayer Notes - Note condivise tra giocatori
 
 ### 🛠️ Technical Debt / Ottimizzazioni
-- [x] Lazy loading per componenti pesanti (Phaser, D3)
-- [x] Open Graph tags per condivisione social
 - [ ] Aumentare copertura unit/e2e test
 - [ ] Analizzare bundle size con source-map-explorer
 - [ ] Global error boundary con reporting
