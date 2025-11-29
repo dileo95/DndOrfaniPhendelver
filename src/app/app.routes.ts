@@ -7,13 +7,8 @@ import { CharacterDice } from './components/character-dice/character-dice';
 import { Diary } from './components/diary/diary';
 import { DiaryPrevious } from './components/diary-previous/diary-previous';
 import { DiaryStory } from './components/diary-story/diary-story';
-import { GalleryArtbook } from './components/gallery-artbook/gallery-artbook';
 import { Cracks } from './components/cracks/cracks';
 import { PlayerNotes } from './components/player-notes/player-notes';
-import { CharacterSheet } from './components/character-sheet/character-sheet';
-import { CombatGame } from './components/combat-game/combat-game';
-import { StoryMap } from './components/story-map/story-map';
-import { Timeline } from './components/timeline/timeline';
 import { Forgotten } from './components/forgotten/forgotten';
 import { authGuard } from './guards/auth.guard';
 import { combatGuard } from './guards/combat.guard';
@@ -50,12 +45,12 @@ export const routes: Routes = [
   },
   {
     path: ':character/sheet',
-    component: CharacterSheet,
+    loadComponent: () => import('./components/character-sheet/character-sheet').then(m => m.CharacterSheet),
     canActivate: [authGuard]
   },
   {
     path: ':character/combat',
-    component: CombatGame,
+    loadComponent: () => import('./components/combat-game/combat-game').then(m => m.CombatGame),
     canActivate: [combatGuard]
   },
   {
@@ -72,15 +67,15 @@ export const routes: Routes = [
   },
   {
     path: 'diary/artbook',
-    component: GalleryArtbook
+    loadComponent: () => import('./components/gallery-artbook/gallery-artbook').then(m => m.GalleryArtbook)
   },
   {
     path: 'diary/map',
-    component: StoryMap
+    loadComponent: () => import('./components/story-map/story-map').then(m => m.StoryMap)
   },
   {
     path: 'diary/timeline',
-    component: Timeline
+    loadComponent: () => import('./components/timeline/timeline').then(m => m.Timeline)
   },
   {
     path: 'cracks',
