@@ -33,7 +33,7 @@ import { VoiceService } from '../../services/voice.service';
   styles: [`
     :host {
       position: fixed;
-      bottom: 80px;
+      bottom: 10px;
       left: 20px;
       z-index: 999;
     }
@@ -139,7 +139,7 @@ import { VoiceService } from '../../services/voice.service';
     /* Mobile */
     @media (max-width: 768px) {
       :host {
-        bottom: 100px;
+        bottom: 5px;
         left: 15px;
       }
 
