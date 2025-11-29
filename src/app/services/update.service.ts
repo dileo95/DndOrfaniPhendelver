@@ -13,12 +13,23 @@ export class UpdateService {
   private toast = inject(ToastService);
 
   constructor() {
-    if (isPlatformBrowser(this.platformId) && this.swUpdate.isEnabled) {
-      this.checkForUpdates();
+    if (isPlatformBrowser(this.platformId)) {
+      console.log('🔧 UpdateService: Service Worker abilitato?', this.swUpdate.isEnabled);
+      
+      if (this.swUpdate.isEnabled) {
+        this.checkForUpdates();
+      } else {
+        console.log('⚠️ Service Worker non abilitato. Assicurati di usare build production.');
+      }
     }
   }
 
   private checkForUpdates() {
+    // Log tutti gli eventi del SW per debug
+    this.swUpdate.versionUpdates.subscribe(event => {
+      console.log('📦 SW Event:', event.type, event);
+    });
+    
     // Ascolta quando una nuova versione è pronta
     this.swUpdate.versionUpdates
       .pipe(filter((event): event is VersionReadyEvent => event.type === 'VERSION_READY'))
@@ -26,6 +37,11 @@ export class UpdateService {
         console.log('🆕 Nuova versione disponibile:', event.latestVersion);
         this.notifyUpdate();
       });
+
+    // Controlla aggiornamenti all'avvio
+    this.swUpdate.checkForUpdate().then(hasUpdate => {
+      console.log('🔍 Controllo iniziale aggiornamenti:', hasUpdate ? 'Trovato!' : 'Nessuno');
+    }).catch(err => console.error('Errore controllo iniziale:', err));
 
     // Controlla aggiornamenti ogni 5 minuti
     setInterval(() => {

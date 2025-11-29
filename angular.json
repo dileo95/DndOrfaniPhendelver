@@ -105,6 +105,7 @@
               "server": false,
               "prerender": false,
               "ssr": false,
+              "serviceWorker": "ngsw-config.json",
               "budgets": [
                 {
                   "type": "initial",
