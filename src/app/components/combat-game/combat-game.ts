@@ -147,6 +147,9 @@ export class CombatGame implements OnInit, OnDestroy {
   // Flag per sapere se la scheda esiste nel database
   sheetExists = signal<boolean>(false);
   
+  // Dragon breath cooldown (recharge on 5-6)
+  dragonBreathAvailable = signal<boolean>(true);
+  
   // Phaser
   private game: any = null;
   private scene: any = null;
@@ -208,6 +211,7 @@ export class CombatGame implements OnInit, OnDestroy {
     this.missedAttacks.set(0);
     this.spellsCast.set(0);
     this.potionsUsed.set(0);
+    this.dragonBreathAvailable.set(true);
     
     this.addLog(`⚔️ Combattimento iniziato! Round 1`);
     this.addLog(`${this.getPlayerName()} vs ${this.selectedEnemy()!.name}`);
@@ -956,6 +960,131 @@ export class CombatGame implements OnInit, OnDestroy {
         }
       }
       
+      // Dragon breath weapon effect
+      showBreathEffect(color: number, damageType: string) {
+        const scene = this as any;
+        const { width, height } = scene.cameras.main;
+        const isMobile = width < 500;
+        
+        const startX = isMobile ? width * 0.75 : width - 140;
+        const startY = height / 2 - 20;
+        const targetX = isMobile ? width * 0.25 : 160;
+        const targetY = height / 2;
+        
+        // Create breath cone - multiple waves of particles
+        const waves = 5;
+        const particlesPerWave = 12;
+        
+        for (let wave = 0; wave < waves; wave++) {
+          setTimeout(() => {
+            for (let i = 0; i < particlesPerWave; i++) {
+              const spreadAngle = (Math.random() - 0.5) * 0.8; // Cone spread
+              const speed = 0.7 + Math.random() * 0.4;
+              const size = 8 + Math.random() * 12;
+              
+              // Main particle
+              const particle = scene.add.circle(startX, startY, size, color, 0.8);
+              
+              // Calculate end position with spread
+              const dx = targetX - startX;
+              const dy = targetY - startY;
+              const endX = targetX + Math.sin(spreadAngle) * 80;
+              const endY = targetY + Math.cos(spreadAngle) * 40 + (Math.random() - 0.5) * 60;
+              
+              scene.tweens.add({
+                targets: particle,
+                x: endX,
+                y: endY,
+                alpha: 0,
+                scale: 0.3,
+                duration: 400 * speed,
+                ease: 'Power1',
+                onComplete: () => particle.destroy()
+              });
+              
+              // Add glow trail
+              if (i % 2 === 0) {
+                const glow = scene.add.circle(startX, startY, size * 1.5, color, 0.3);
+                scene.tweens.add({
+                  targets: glow,
+                  x: endX * 0.8 + startX * 0.2,
+                  y: endY * 0.8 + startY * 0.2,
+                  alpha: 0,
+                  scale: 0.5,
+                  duration: 350 * speed,
+                  onComplete: () => glow.destroy()
+                });
+              }
+            }
+            
+            // Special effects based on damage type
+            if (wave === 2) {
+              if (damageType === 'lightning') {
+                // Lightning bolts
+                for (let j = 0; j < 3; j++) {
+                  const bolt = scene.add.line(
+                    0, 0,
+                    startX, startY + (j - 1) * 30,
+                    targetX + Math.random() * 40, targetY + (j - 1) * 20,
+                    color, 1
+                  );
+                  bolt.setLineWidth(3);
+                  scene.tweens.add({
+                    targets: bolt,
+                    alpha: 0,
+                    duration: 150,
+                    yoyo: true,
+                    repeat: 2,
+                    onComplete: () => bolt.destroy()
+                  });
+                }
+              } else if (damageType === 'cold') {
+                // Snowflakes/ice crystals
+                for (let j = 0; j < 8; j++) {
+                  const x = targetX + (Math.random() - 0.5) * 100;
+                  const y = targetY + (Math.random() - 0.5) * 80;
+                  const snowflake = scene.add.star(x, y, 6, 3, 8, 0xffffff, 0.9);
+                  scene.tweens.add({
+                    targets: snowflake,
+                    angle: 360,
+                    alpha: 0,
+                    scale: 0.2,
+                    duration: 600,
+                    onComplete: () => snowflake.destroy()
+                  });
+                }
+              }
+            }
+          }, wave * 80);
+        }
+        
+        // Screen flash
+        const flash = scene.add.rectangle(width / 2, height / 2, width, height, color, 0.3);
+        scene.tweens.add({
+          targets: flash,
+          alpha: 0,
+          duration: 400,
+          onComplete: () => flash.destroy()
+        });
+        
+        // Impact explosion at player
+        setTimeout(() => {
+          for (let i = 0; i < 15; i++) {
+            const angle = (i / 15) * Math.PI * 2;
+            const impactParticle = scene.add.circle(targetX, targetY, 6, color);
+            scene.tweens.add({
+              targets: impactParticle,
+              x: targetX + Math.cos(angle) * 50,
+              y: targetY + Math.sin(angle) * 50,
+              alpha: 0,
+              scale: 0.3,
+              duration: 300,
+              onComplete: () => impactParticle.destroy()
+            });
+          }
+        }, waves * 80 + 100);
+      }
+      
       // Heal effect
       showHealEffect() {
         const scene = this as any;
@@ -1227,7 +1356,17 @@ export class CombatGame implements OnInit, OnDestroy {
     const enemy = this.selectedEnemy()!;
     const sheet = this.sheet()!;
     
-    // Enemy attack
+    // Check if dragon can use breath weapon
+    const breathAbility = enemy.abilities?.find(a => a.startsWith('Soffio'));
+    const isDragon = enemy.shape === 'dragon' && breathAbility;
+    
+    if (isDragon && this.dragonBreathAvailable()) {
+      // Dragon uses breath weapon!
+      this.useBreathWeapon(enemy, breathAbility!);
+      return;
+    }
+    
+    // Normal attack
     const d20 = this.rollD20();
     const attackRoll = d20 + enemy.attackBonus;
     const playerAC = sheet.armorClass + (this.isDefending() ? 2 : 0);
@@ -1263,6 +1402,15 @@ export class CombatGame implements OnInit, OnDestroy {
       this.addLog(`🛡️ Parato! (CA ${playerAC})`);
     }
     
+    // Try to recharge breath weapon (5-6 on d6)
+    if (isDragon && !this.dragonBreathAvailable()) {
+      const rechargeRoll = Math.floor(Math.random() * 6) + 1;
+      if (rechargeRoll >= 5) {
+        this.dragonBreathAvailable.set(true);
+        this.addLog(`🔥 ${enemy.name} ricarica il suo soffio!`);
+      }
+    }
+    
     // Special abilities
     if (enemy.abilities?.includes('Rigenerazione 10') && this.enemyHP() > 0) {
       this.enemyHP.update(hp => Math.min(this.enemyMaxHP(), hp + 10));
@@ -1276,6 +1424,86 @@ export class CombatGame implements OnInit, OnDestroy {
       this.isPlayerTurn.set(true);
       this.addLog(`\n⚔️ Round ${this.currentRound()}`);
     }, 1000);
+  }
+  
+  // ============ DRAGON BREATH WEAPON ============
+  useBreathWeapon(enemy: Enemy, breathAbility: string) {
+    const sheet = this.sheet()!;
+    
+    // Parse breath ability: "Soffio Fuoco (7d6)" -> { type: 'Fuoco', dice: '7d6' }
+    const match = breathAbility.match(/Soffio\s+([\w\/]+)\s*\(?(\d+d\d+)?\)?/);
+    const breathType = match?.[1] || 'Fuoco';
+    const breathDice = match?.[2] || '4d6';
+    
+    // Determine damage type and color
+    let damageType = 'fire';
+    let breathColor = 0xff6600;
+    
+    if (breathType.includes('Acido')) {
+      damageType = 'acid';
+      breathColor = 0x33ff33;
+    } else if (breathType.includes('Fulmine')) {
+      damageType = 'lightning';
+      breathColor = 0x3399ff;
+    } else if (breathType.includes('Gelo') || breathType.includes('Freddo')) {
+      damageType = 'cold';
+      breathColor = 0x99ccff;
+    } else if (breathType.includes('Veleno')) {
+      damageType = 'poison';
+      breathColor = 0x66cc33;
+    } else if (breathType.includes('Fuoco')) {
+      damageType = 'fire';
+      breathColor = 0xff6600;
+    }
+    
+    this.addLog(`🐉 ${enemy.name} usa il suo Soffio ${breathType}!`);
+    
+    // Play breath animation
+    if (this.scene) {
+      this.scene.showBreathEffect(breathColor, damageType);
+    }
+    
+    // Calculate damage - player can make DEX save for half
+    const fullDamage = this.rollDamage(breathDice);
+    const saveDC = 10 + Math.floor((parseInt(enemy.cr) || 2) * 1.5); // Approximate DC
+    const dexMod = Math.floor((sheet.dexterity - 10) / 2);
+    const saveRoll = this.rollD20();
+    const totalSave = saveRoll + dexMod;
+    
+    this.addLog(`🎲 Tiro Salvezza DES: ${saveRoll} + ${dexMod} = ${totalSave} (CD ${saveDC})`);
+    
+    let actualDamage = fullDamage;
+    if (totalSave >= saveDC) {
+      actualDamage = Math.floor(fullDamage / 2);
+      this.addLog(`✅ Salvezza riuscita! Danni dimezzati`);
+    } else {
+      this.addLog(`❌ Salvezza fallita!`);
+    }
+    
+    this.playerHP.update(hp => Math.max(0, hp - actualDamage));
+    this.totalDamageTaken.update(d => d + actualDamage);
+    this.addLog(`🔥 Subisci ${actualDamage} danni da ${damageType}!`);
+    
+    if (this.scene) {
+      this.scene.playAnimation('hurt');
+      this.scene.shakePlayer();
+    }
+    
+    // Breath weapon now on cooldown
+    this.dragonBreathAvailable.set(false);
+    
+    if (this.playerHP() <= 0) {
+      this.defeat();
+      return;
+    }
+    
+    // End turn
+    setTimeout(() => {
+      this.isDefending.set(false);
+      this.currentRound.update(r => r + 1);
+      this.isPlayerTurn.set(true);
+      this.addLog(`\n⚔️ Round ${this.currentRound()}`);
+    }, 1500);
   }
   
   // ============ COMBAT END ============

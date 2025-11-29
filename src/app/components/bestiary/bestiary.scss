@@ -1,52 +1,29 @@
 @use 'sass:color';
+@use '../../../styles.scss' as *;
 
 $gold: #d4af37;
 $dark-brown: #1a1a2e;
 $parchment: #f4e4bc;
 
-.bestiary-container {
+:host {
+  display: block;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a0f0a 0%, #2c1810 50%, #1a0f0a 100%);
-  padding-bottom: 2rem;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
 }
 
-// ============ HEADER ============
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.bestiary-container {
+  min-height: 100vh;
   padding: 1rem;
-  background: linear-gradient(180deg, rgba(44, 24, 16, 0.95) 0%, rgba(26, 15, 10, 0.9) 100%);
-  border-bottom: 2px solid $gold;
-  position: relative;
-
-  .back-btn {
-    position: absolute;
-    left: 1rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-
-    img {
-      width: 24px;
-      height: 24px;
-      filter: invert(1);
-    }
-  }
-
-  h1 {
-    font-family: 'MorrisRoman', serif;
-    color: $gold;
-    font-size: 2rem;
-    margin: 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  }
+  padding-top: 60px;
+  padding-bottom: 4rem;
 }
 
 // ============ FILTERS ============
 .filters {
-  padding: 1rem;
+  padding: 0 1rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -58,12 +35,12 @@ $parchment: #f4e4bc;
   width: 100%;
   padding: 0.75rem 1rem;
   border: 2px solid rgba(212, 175, 55, 0.3);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.4);
+  border-radius: 2rem;
+  background: rgba(44, 24, 16, 0.6);
   color: $parchment;
   font-family: 'Cinzel', serif;
   font-size: 1rem;
-  transition: border-color 0.3s;
+  transition: all 0.3s;
 }
 
 .search-box input::placeholder {
@@ -73,25 +50,29 @@ $parchment: #f4e4bc;
 .search-box input:focus {
   outline: none;
   border-color: $gold;
+  background: rgba(74, 47, 31, 0.8);
 }
 
 .filter-row {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .filter-row select {
   flex: 1;
   min-width: 150px;
+  max-width: 250px;
   padding: 0.6rem 1rem;
   border: 2px solid rgba(212, 175, 55, 0.3);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.4);
+  border-radius: 2rem;
+  background: rgba(44, 24, 16, 0.6);
   color: $parchment;
   font-family: 'Cinzel', serif;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: all 0.3s;
 }
 
 .filter-row select:focus {
@@ -116,12 +97,13 @@ $parchment: #f4e4bc;
 
 .creature-card {
   border: 2px solid rgba(212, 175, 55, 0.4);
-  border-radius: 12px;
+  border-radius: 1rem;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  background: rgba(44, 24, 16, 0.5);
 }
 
 .creature-card:hover {
@@ -163,7 +145,7 @@ $parchment: #f4e4bc;
 }
 
 .creature-info h3 {
-  font-family: 'MorrisRoman', serif;
+  font-family: myFirstFont, serif;
   color: $gold;
   font-size: 1.2rem;
   margin: 0 0 0.5rem 0;
@@ -220,28 +202,31 @@ $parchment: #f4e4bc;
   z-index: 1000;
   padding: 1rem;
   overflow-y: auto;
+  animation: fadeIn 0.3s ease;
 }
 
 .creature-detail {
-  background: linear-gradient(135deg, #2c1810 0%, #1a0f0a 100%);
-  border: 2px solid $gold;
-  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(44, 24, 16, 0.98), rgba(74, 47, 31, 0.98));
+  border: 3px solid $gold;
+  border-radius: 1rem;
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  animation: slideUp 0.3s ease;
 }
 
 .close-btn {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid $gold;
-  color: $gold;
-  width: 36px;
-  height: 36px;
+  background: rgba(212, 175, 55, 0.2);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  color: white;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   font-size: 1.5rem;
   cursor: pointer;
@@ -254,7 +239,25 @@ $parchment: #f4e4bc;
 
 .close-btn:hover {
   background: $gold;
-  color: #1a0f0a;
+  border-color: $gold;
+  color: #2c1810;
+  transform: rotate(90deg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .detail-header {
@@ -268,6 +271,7 @@ $parchment: #f4e4bc;
 .detail-sprite .dragon-icon,
 .detail-sprite .type-icon-large {
   font-size: 4rem;
+  filter: drop-shadow(0 0 10px currentColor);
 }
 
 .detail-sprite .dragon-icon.wyrmling {
@@ -283,7 +287,7 @@ $parchment: #f4e4bc;
 }
 
 .detail-title h2 {
-  font-family: 'MorrisRoman', serif;
+  font-family: myFirstFont, serif;
   color: $gold;
   font-size: 1.8rem;
   margin: 0 0 0.25rem 0;
@@ -299,7 +303,7 @@ $parchment: #f4e4bc;
 .detail-cr {
   text-align: center;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   min-width: 70px;
 }
 
@@ -331,7 +335,7 @@ $parchment: #f4e4bc;
 }
 
 .stat-section h4 {
-  font-family: 'MorrisRoman', serif;
+  font-family: myFirstFont, serif;
   color: $gold;
   font-size: 1.1rem;
   margin: 0 0 0.75rem 0;
