@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { ToastContainer } from './components/toast-container/toast-container';
 import { OfflineIndicator } from './components/offline-indicator/offline-indicator';
+import { UpdateService } from './services/update.service';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { OfflineIndicator } from './components/offline-indicator/offline-indicat
 export class App {
   protected readonly title = signal('angular-phendelver');
   private platformId = inject(PLATFORM_ID);
+  private updateService = inject(UpdateService); // Inizializza il servizio aggiornamenti
   
   constructor(private router: Router) {
     // Reset scroll position on route change

@@ -170,6 +170,7 @@ src/
 - [x] **Statistiche Combat** - Riepilogo post-combattimento (danni inflitti/subiti, round)
 
 ### 🟢 Quick Wins (Piccoli miglioramenti)
+- [x] Badge PWA per notifica nuove versioni
 - [ ] Storico dei tiri di dado nella sessione
 - [ ] Badge PWA sull'icona per notifiche
 - [ ] Migliorare keyboard navigation e accessibilità

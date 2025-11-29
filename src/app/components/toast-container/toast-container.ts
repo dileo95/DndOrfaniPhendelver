@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ToastService } from '../../services/toast.service';
+import { ToastService, Toast } from '../../services/toast.service';
 
 @Component({
   selector: 'app-toast-container',
@@ -12,10 +12,15 @@ import { ToastService } from '../../services/toast.service';
         <div 
           class="toast toast-{{ toast.type }}"
           [class.toast-visible]="true"
-          (click)="toastService.remove(toast.id)"
+          [class.toast-persistent]="toast.duration === 0"
         >
           <span class="toast-icon">{{ toast.icon }}</span>
           <span class="toast-message">{{ toast.message }}</span>
+          @if (toast.action) {
+            <button class="toast-action" (click)="handleAction(toast)">
+              {{ toast.action.label }}
+            </button>
+          }
           <button class="toast-close" (click)="toastService.remove(toast.id); $event.stopPropagation()">×</button>
         </div>
       }
@@ -46,7 +51,6 @@ import { ToastService } from '../../services/toast.service';
       color: #f5f5f5;
       font-family: 'Cinzel', serif;
       font-size: 14px;
-      cursor: pointer;
       pointer-events: auto;
       animation: slideIn 0.3s ease-out forwards;
       opacity: 0;
@@ -58,6 +62,11 @@ import { ToastService } from '../../services/toast.service';
       transform: translateX(0);
     }
 
+    .toast-persistent {
+      border-width: 2px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 175, 55, 0.2);
+    }
+
     .toast-icon {
       font-size: 20px;
       flex-shrink: 0;
@@ -67,6 +76,25 @@ import { ToastService } from '../../services/toast.service';
       flex: 1;
       line-height: 1.4;
       word-break: break-word;
+    }
+
+    .toast-action {
+      background: linear-gradient(135deg, #d4af37 0%, #b8962e 100%);
+      border: none;
+      color: #1a1a2e;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .toast-action:hover {
+      background: linear-gradient(135deg, #e5c04a 0%, #c9a73f 100%);
+      transform: scale(1.05);
     }
 
     .toast-close {
@@ -128,9 +156,21 @@ import { ToastService } from '../../services/toast.service';
         font-size: 13px;
         padding: 12px 14px;
       }
+
+      .toast-action {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
     }
   `]
 })
 export class ToastContainer {
   toastService = inject(ToastService);
+
+  handleAction(toast: Toast) {
+    if (toast.action) {
+      toast.action.callback();
+    }
+    this.toastService.remove(toast.id);
+  }
 }
