@@ -197,10 +197,10 @@ src/
 - [ ] Multiplayer Notes - Note condivise tra giocatori
 
 ### 🛠️ Technical Debt / Ottimizzazioni
-- [ ] Lazy loading per componenti pesanti (Phaser, D3)
+- [x] Lazy loading per componenti pesanti (Phaser, D3)
+- [x] Open Graph tags per condivisione social
 - [ ] Aumentare copertura unit/e2e test
 - [ ] Analizzare bundle size con source-map-explorer
-- [ ] Open Graph tags per condivisione social
 - [ ] Global error boundary con reporting
 
 ### 💡 Altre Idee
