@@ -6,12 +6,14 @@ import { ToastContainer } from './components/toast-container/toast-container';
 import { OfflineIndicator } from './components/offline-indicator/offline-indicator';
 import { VoiceButton } from './components/voice-button/voice-button';
 import { VoiceHelpModal } from './components/voice-help-modal/voice-help-modal';
+import { KeyboardHelpModal } from './components/keyboard-help-modal/keyboard-help-modal';
 import { UpdateService } from './services/update.service';
 import { VoiceService } from './services/voice.service';
+import { KeyboardService } from './services/keyboard.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ToastContainer, OfflineIndicator, VoiceButton, VoiceHelpModal],
+  imports: [RouterOutlet, ToastContainer, OfflineIndicator, VoiceButton, VoiceHelpModal, KeyboardHelpModal],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -20,6 +22,7 @@ export class App {
   private platformId = inject(PLATFORM_ID);
   private updateService = inject(UpdateService); // Inizializza il servizio aggiornamenti
   private voiceService = inject(VoiceService);   // Inizializza il servizio vocale
+  private keyboardService = inject(KeyboardService); // Inizializza scorciatoie tastiera
   
   constructor(private router: Router) {
     if (isPlatformBrowser(this.platformId)) {

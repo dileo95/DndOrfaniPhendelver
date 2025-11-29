@@ -192,9 +192,9 @@ src/
 - [ ] Sprite per Auryn e Ravel
 
 ### 🟢 Quick Wins (Piccoli miglioramenti)
-- [ ] Storico dei tiri di dado nella sessione
-- [ ] Migliorare keyboard navigation e accessibilità
-- [ ] Suoni effetti (attacchi, magie, hit, miss, vittoria)
+- [x] Storico dei tiri di dado nella sessione
+- [x] Keyboard navigation con scorciatoie (Shift+? per aiuto)
+- [x] Suoni effetti combat (hit, miss, critico, magia, vittoria)
 
 ### 🟡 Feature Medie
 - [ ] Inventario migliorato - Drag & drop, filtri, peso totale con encumbrance

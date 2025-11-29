@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatabaseService, CharacterSheet as Sheet, Weapon, Spell } from '../../services/database.service';
 import { ToastService } from '../../services/toast.service';
+import { CombatAudioService } from '../../services/combat-audio.service';
 
 // Phaser will be imported dynamically only in browser
 let Phaser: any;
@@ -154,8 +155,9 @@ export class CombatGame implements OnInit, OnDestroy {
   private game: any = null;
   private scene: any = null;
   
-  // Toast service
+  // Services
   private toast = inject(ToastService);
+  private audio = inject(CombatAudioService);
 
   constructor(
     private route: ActivatedRoute,
@@ -1233,6 +1235,7 @@ export class CombatGame implements OnInit, OnDestroy {
     if (isMiss) {
       this.addLog(`❌ Fallimento critico!`);
       this.missedAttacks.update(m => m + 1);
+      this.audio.play('miss');
     } else if (isCrit || attackRoll >= enemy.ac) {
       // Hit!
       let damage = this.rollDamage(weapon.damage);
@@ -1240,6 +1243,9 @@ export class CombatGame implements OnInit, OnDestroy {
         damage = damage * 2;
         this.addLog(`💥 CRITICO! Danni raddoppiati!`);
         this.criticalHits.update(c => c + 1);
+        this.audio.play('critical');
+      } else {
+        this.audio.play('hit');
       }
       
       this.enemyHP.update(hp => Math.max(0, hp - damage));
@@ -1255,6 +1261,7 @@ export class CombatGame implements OnInit, OnDestroy {
     } else {
       this.addLog(`❌ Mancato! (CA ${enemy.ac})`);
       this.missedAttacks.update(m => m + 1);
+      this.audio.play('miss');
     }
     
     this.endPlayerTurn();
@@ -1280,6 +1287,7 @@ export class CombatGame implements OnInit, OnDestroy {
     
     this.addLog(`✨ ${this.getPlayerName()} lancia ${spell.name}!`);
     this.spellsCast.update(s => s + 1);
+    this.audio.play('magic');
     
     // Simple damage spell logic
     if (spell.level === 0) {
@@ -1320,6 +1328,7 @@ export class CombatGame implements OnInit, OnDestroy {
     
     this.isDefending.set(true);
     this.addLog(`🛡️ ${this.getPlayerName()} si mette in difesa (+2 CA fino al prossimo turno)`);
+    this.audio.play('defend');
     
     if (this.scene) this.scene.showDefendEffect();
     
@@ -1333,6 +1342,7 @@ export class CombatGame implements OnInit, OnDestroy {
     this.playerHP.update(hp => Math.min(this.playerMaxHP(), hp + healing));
     this.potionsUsed.update(p => p + 1);
     this.addLog(`🧪 ${this.getPlayerName()} beve una pozione! Recupera ${healing} HP`);
+    this.audio.play('potion');
     
     if (this.scene) this.scene.showHealEffect();
     
@@ -1378,6 +1388,7 @@ export class CombatGame implements OnInit, OnDestroy {
     
     if (d20 === 1) {
       this.addLog(`❌ ${enemy.name} fallisce miseramente!`);
+      this.audio.play('enemyMiss');
     } else if (d20 === 20 || attackRoll >= playerAC) {
       let damage = this.rollDamage(enemy.damage);
       if (d20 === 20) {
@@ -1388,6 +1399,7 @@ export class CombatGame implements OnInit, OnDestroy {
       this.playerHP.update(hp => Math.max(0, hp - damage));
       this.totalDamageTaken.update(d => d + damage);
       this.addLog(`💔 Subisci ${damage} danni ${enemy.damageType}!`);
+      this.audio.play('enemyHit');
       
       if (this.scene) {
         this.scene.playAnimation('hurt');
@@ -1400,6 +1412,7 @@ export class CombatGame implements OnInit, OnDestroy {
       }
     } else {
       this.addLog(`🛡️ Parato! (CA ${playerAC})`);
+      this.audio.play('defend');
     }
     
     // Try to recharge breath weapon (5-6 on d6)
@@ -1457,6 +1470,7 @@ export class CombatGame implements OnInit, OnDestroy {
     }
     
     this.addLog(`🐉 ${enemy.name} usa il suo Soffio ${breathType}!`);
+    this.audio.play('breath');
     
     // Play breath animation
     if (this.scene) {
@@ -1516,6 +1530,8 @@ export class CombatGame implements OnInit, OnDestroy {
     this.addLog(`${enemy.name} sconfitto!`);
     this.addLog(`Guadagni ${enemy.xp} XP!`);
     
+    this.audio.play('victory');
+    
     // Combat statistics
     this.addLog(`\n📊 STATISTICHE COMBATTIMENTO:`);
     this.addLog(`⚔️ Danni inflitti: ${this.totalDamageDealt()}`);
@@ -1540,6 +1556,8 @@ export class CombatGame implements OnInit, OnDestroy {
     
     this.addLog(`\n💀 SCONFITTA!`);
     this.addLog(`${this.getPlayerName()} è caduto in battaglia...`);
+    
+    this.audio.play('defeat');
     
     // Combat statistics
     this.addLog(`\n📊 STATISTICHE COMBATTIMENTO:`);
