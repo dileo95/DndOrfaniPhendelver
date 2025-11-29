@@ -3,10 +3,11 @@ import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { ToastContainer } from './components/toast-container/toast-container';
+import { OfflineIndicator } from './components/offline-indicator/offline-indicator';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ToastContainer],
+  imports: [RouterOutlet, ToastContainer, OfflineIndicator],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
