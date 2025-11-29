@@ -1,0 +1,476 @@
+@use 'sass:color';
+
+$gold: #d4af37;
+$dark-brown: #1a1a2e;
+$parchment: #f4e4bc;
+
+.bestiary-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a0f0a 0%, #2c1810 50%, #1a0f0a 100%);
+  padding-bottom: 2rem;
+}
+
+// ============ HEADER ============
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(44, 24, 16, 0.95) 0%, rgba(26, 15, 10, 0.9) 100%);
+  border-bottom: 2px solid $gold;
+  position: relative;
+
+  .back-btn {
+    position: absolute;
+    left: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+
+    img {
+      width: 24px;
+      height: 24px;
+      filter: invert(1);
+    }
+  }
+
+  h1 {
+    font-family: 'MorrisRoman', serif;
+    color: $gold;
+    font-size: 2rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+}
+
+// ============ FILTERS ============
+.filters {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  color: $parchment;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.search-box input::placeholder {
+  color: rgba(244, 228, 188, 0.5);
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: $gold;
+}
+
+.filter-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-row select {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.6rem 1rem;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  color: $parchment;
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filter-row select:focus {
+  outline: none;
+  border-color: $gold;
+}
+
+.filter-row select option {
+  background: #2c1810;
+  color: $parchment;
+}
+
+// ============ CREATURE GRID ============
+.creature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.creature-card {
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.creature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.2);
+  border-color: $gold;
+}
+
+.creature-sprite {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.creature-sprite .type-icon {
+  font-size: 3rem;
+}
+
+.creature-sprite .dragon-sprite {
+  font-size: 3.5rem;
+  text-shadow: 0 0 20px currentColor;
+}
+
+.creature-sprite .dragon-sprite.wyrmling {
+  font-size: 3rem;
+}
+
+.creature-sprite .dragon-sprite.young {
+  font-size: 4rem;
+}
+
+.creature-info {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.creature-info h3 {
+  font-family: 'MorrisRoman', serif;
+  color: $gold;
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.creature-meta {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.cr-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.size-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  background: rgba(212, 175, 55, 0.2);
+  color: $gold;
+}
+
+.creature-desc {
+  color: rgba(244, 228, 188, 0.8);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: rgba(244, 228, 188, 0.6);
+  font-size: 1.2rem;
+}
+
+// ============ MODAL ============
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.creature-detail {
+  background: linear-gradient(135deg, #2c1810 0%, #1a0f0a 100%);
+  border: 2px solid $gold;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid $gold;
+  color: $gold;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: $gold;
+  color: #1a0f0a;
+}
+
+.detail-header {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.detail-sprite .dragon-icon,
+.detail-sprite .type-icon-large {
+  font-size: 4rem;
+}
+
+.detail-sprite .dragon-icon.wyrmling {
+  font-size: 3.5rem;
+}
+
+.detail-sprite .dragon-icon.young {
+  font-size: 5rem;
+}
+
+.detail-title {
+  flex: 1;
+}
+
+.detail-title h2 {
+  font-family: 'MorrisRoman', serif;
+  color: $gold;
+  font-size: 1.8rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.detail-title .detail-type {
+  color: rgba(244, 228, 188, 0.7);
+  font-size: 0.9rem;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.detail-cr {
+  text-align: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  min-width: 70px;
+}
+
+.detail-cr .cr-label {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.detail-cr .cr-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.detail-cr .xp-value {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.detail-body {
+  padding: 1rem;
+}
+
+.stat-section {
+  margin-bottom: 1.5rem;
+}
+
+.stat-section h4 {
+  font-family: 'MorrisRoman', serif;
+  color: $gold;
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.combat-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  min-width: 80px;
+  flex: 1;
+}
+
+.stat-box .stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(244, 228, 188, 0.6);
+  margin-bottom: 0.25rem;
+}
+
+.stat-box .stat-value {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: $gold;
+}
+
+.stat-box .stat-value.small {
+  font-size: 0.9rem;
+}
+
+.attack-info {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+.attack-info p {
+  margin: 0.25rem 0;
+  color: $parchment;
+  font-size: 0.9rem;
+}
+
+.attack-info strong {
+  color: $gold;
+}
+
+.ability-scores {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+}
+
+.ability {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.ability .ability-name {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(244, 228, 188, 0.6);
+  font-weight: bold;
+}
+
+.ability .ability-score {
+  display: block;
+  font-size: 1.1rem;
+  color: $parchment;
+  font-weight: bold;
+}
+
+.ability .ability-mod {
+  display: block;
+  font-size: 0.85rem;
+  color: $gold;
+}
+
+.abilities-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.abilities-list li {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  color: $parchment;
+  font-size: 0.9rem;
+  border-left: 3px solid $gold;
+}
+
+.lore-text {
+  color: rgba(244, 228, 188, 0.85);
+  font-style: italic;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border-left: 3px solid rgba(212, 175, 55, 0.5);
+}
+
+// ============ RESPONSIVE ============
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .creature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .detail-cr {
+    margin-top: 0.5rem;
+  }
+
+  .ability-scores {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

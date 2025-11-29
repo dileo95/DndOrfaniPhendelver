@@ -23,7 +23,7 @@ export interface Enemy {
   description: string;
   color: number;       // Colore principale del nemico
   size: number;        // Moltiplicatore dimensione (1 = normale)
-  shape: 'humanoid' | 'beast' | 'undead' | 'giant';
+  shape: 'humanoid' | 'beast' | 'undead' | 'giant' | 'dragon';
 }
 
 export const ENEMIES: Enemy[] = [
@@ -48,6 +48,30 @@ export const ENEMIES: Enemy[] = [
   { id: 'owlbear', name: 'Gufolorso', hp: 59, ac: 13, attackBonus: 7, damage: '2d8+5', damageType: 'slashing', xp: 700, cr: '3', abilities: ['Multiattacco'], description: 'Bestia feroce.', color: 0x5a4a3a, size: 1.5, shape: 'beast' },
   { id: 'minotaur', name: 'Minotauro', hp: 76, ac: 14, attackBonus: 6, damage: '2d12+4', damageType: 'slashing', xp: 700, cr: '3', abilities: ['Carica'], description: 'Bestia del labirinto.', color: 0x6a3a2a, size: 1.6, shape: 'beast' },
   { id: 'troll', name: 'Troll', hp: 84, ac: 15, attackBonus: 7, damage: '2d6+4', damageType: 'slashing', xp: 1800, cr: '5', abilities: ['Rigenerazione 10', 'Vulnerabile: fuoco/acido'], description: 'Si rigenera.', color: 0x2a5a2a, size: 1.7, shape: 'giant' },
+  
+  // ============ DRAGHI WYRMLING (CR 2-4, piccoli) ============
+  { id: 'black_wyrmling', name: 'Drago Nero (Wyrmling)', hp: 33, ac: 15, attackBonus: 4, damage: '1d10+2', damageType: 'piercing', xp: 450, cr: '2', abilities: ['Soffio Acido (5d8)', 'Anfibio'], description: 'Piccolo drago cromatico. Vive in paludi e sputa acido.', color: 0x1a1a1a, size: 1.2, shape: 'dragon' },
+  { id: 'blue_wyrmling', name: 'Drago Blu (Wyrmling)', hp: 52, ac: 17, attackBonus: 5, damage: '1d10+3', damageType: 'piercing', xp: 700, cr: '3', abilities: ['Soffio Fulmine (4d10)', 'Scavare'], description: 'Piccolo drago cromatico. Vive nei deserti e sputa fulmini.', color: 0x0066cc, size: 1.3, shape: 'dragon' },
+  { id: 'green_wyrmling', name: 'Drago Verde (Wyrmling)', hp: 38, ac: 17, attackBonus: 4, damage: '1d10+2', damageType: 'piercing', xp: 450, cr: '2', abilities: ['Soffio Veleno (6d6)', 'Anfibio'], description: 'Piccolo drago cromatico. Vive nelle foreste e sputa veleno.', color: 0x228b22, size: 1.2, shape: 'dragon' },
+  { id: 'red_wyrmling', name: 'Drago Rosso (Wyrmling)', hp: 75, ac: 17, attackBonus: 6, damage: '1d10+4', damageType: 'piercing', xp: 1100, cr: '4', abilities: ['Soffio Fuoco (7d6)', 'Immunità Fuoco'], description: 'Piccolo drago cromatico. Il più temuto, sputa fuoco devastante.', color: 0xcc0000, size: 1.5, shape: 'dragon' },
+  { id: 'white_wyrmling', name: 'Drago Bianco (Wyrmling)', hp: 32, ac: 16, attackBonus: 4, damage: '1d10+2', damageType: 'piercing', xp: 450, cr: '2', abilities: ['Soffio Gelo (5d8)', 'Scalare Ghiaccio'], description: 'Piccolo drago cromatico. Vive nelle terre ghiacciate.', color: 0xe8e8e8, size: 1.2, shape: 'dragon' },
+  { id: 'brass_wyrmling', name: 'Drago d\'Ottone (Wyrmling)', hp: 16, ac: 16, attackBonus: 4, damage: '1d10+2', damageType: 'piercing', xp: 100, cr: '1', abilities: ['Soffio Fuoco/Sonno', 'Scavare'], description: 'Piccolo drago metallico buono. Ama conversare.', color: 0xb5a642, size: 1.1, shape: 'dragon' },
+  { id: 'bronze_wyrmling', name: 'Drago di Bronzo (Wyrmling)', hp: 32, ac: 17, attackBonus: 4, damage: '1d10+2', damageType: 'piercing', xp: 450, cr: '2', abilities: ['Soffio Fulmine/Repulsione', 'Anfibio'], description: 'Piccolo drago metallico buono. Protettore delle coste.', color: 0xcd7f32, size: 1.2, shape: 'dragon' },
+  { id: 'copper_wyrmling', name: 'Drago di Rame (Wyrmling)', hp: 22, ac: 16, attackBonus: 4, damage: '1d10+2', damageType: 'piercing', xp: 450, cr: '1', abilities: ['Soffio Acido/Rallentamento', 'Scalare'], description: 'Piccolo drago metallico buono. Burlone e scherzoso.', color: 0xb87333, size: 1.1, shape: 'dragon' },
+  { id: 'gold_wyrmling', name: 'Drago d\'Oro (Wyrmling)', hp: 60, ac: 17, attackBonus: 6, damage: '1d10+4', damageType: 'piercing', xp: 700, cr: '3', abilities: ['Soffio Fuoco/Indebolimento', 'Anfibio'], description: 'Piccolo drago metallico buono. Il più saggio e potente.', color: 0xffd700, size: 1.4, shape: 'dragon' },
+  { id: 'silver_wyrmling', name: 'Drago d\'Argento (Wyrmling)', hp: 45, ac: 17, attackBonus: 5, damage: '1d10+3', damageType: 'piercing', xp: 450, cr: '2', abilities: ['Soffio Gelo/Paralisi', 'Camminare Nuvole'], description: 'Piccolo drago metallico buono. Amichevole con gli umani.', color: 0xc0c0c0, size: 1.3, shape: 'dragon' },
+  
+  // ============ DRAGHI GIOVANI (CR 7-10, grandi) ============
+  { id: 'young_black', name: 'Drago Nero Giovane', hp: 127, ac: 18, attackBonus: 7, damage: '2d10+4', damageType: 'piercing', xp: 2900, cr: '7', abilities: ['Multiattacco', 'Soffio Acido (11d8)', 'Anfibio'], description: 'Drago cromatico adolescente. Crudele e vendicativo.', color: 0x1a1a1a, size: 2.0, shape: 'dragon' },
+  { id: 'young_blue', name: 'Drago Blu Giovane', hp: 152, ac: 18, attackBonus: 9, damage: '2d10+5', damageType: 'piercing', xp: 5000, cr: '9', abilities: ['Multiattacco', 'Soffio Fulmine (10d10)', 'Scavare'], description: 'Drago cromatico adolescente. Vanitoso e territoriale.', color: 0x0066cc, size: 2.3, shape: 'dragon' },
+  { id: 'young_green', name: 'Drago Verde Giovane', hp: 136, ac: 18, attackBonus: 7, damage: '2d10+4', damageType: 'piercing', xp: 3900, cr: '8', abilities: ['Multiattacco', 'Soffio Veleno (12d6)', 'Anfibio'], description: 'Drago cromatico adolescente. Manipolatore e subdolo.', color: 0x228b22, size: 2.1, shape: 'dragon' },
+  { id: 'young_red', name: 'Drago Rosso Giovane', hp: 178, ac: 18, attackBonus: 10, damage: '2d10+6', damageType: 'piercing', xp: 5900, cr: '10', abilities: ['Multiattacco', 'Soffio Fuoco (16d6)', 'Immunità Fuoco'], description: 'Drago cromatico adolescente. Arrogante e distruttivo.', color: 0xcc0000, size: 2.5, shape: 'dragon' },
+  { id: 'young_white', name: 'Drago Bianco Giovane', hp: 133, ac: 17, attackBonus: 7, damage: '2d10+4', damageType: 'piercing', xp: 2300, cr: '6', abilities: ['Multiattacco', 'Soffio Gelo (10d8)', 'Scalare Ghiaccio'], description: 'Drago cromatico adolescente. Bestiale e feroce.', color: 0xe8e8e8, size: 2.0, shape: 'dragon' },
+  { id: 'young_brass', name: 'Drago d\'Ottone Giovane', hp: 110, ac: 17, attackBonus: 7, damage: '2d10+4', damageType: 'piercing', xp: 2300, cr: '6', abilities: ['Multiattacco', 'Soffio Fuoco (9d6)', 'Scavare'], description: 'Drago metallico buono adolescente. Chiacchierone incorreggibile.', color: 0xb5a642, size: 2.0, shape: 'dragon' },
+  { id: 'young_bronze', name: 'Drago di Bronzo Giovane', hp: 142, ac: 18, attackBonus: 8, damage: '2d10+5', damageType: 'piercing', xp: 3900, cr: '8', abilities: ['Multiattacco', 'Soffio Fulmine (10d10)', 'Anfibio', 'Cambia Forma'], description: 'Drago metallico buono adolescente. Difensore del bene.', color: 0xcd7f32, size: 2.2, shape: 'dragon' },
+  { id: 'young_copper', name: 'Drago di Rame Giovane', hp: 119, ac: 17, attackBonus: 7, damage: '2d10+4', damageType: 'piercing', xp: 2900, cr: '7', abilities: ['Multiattacco', 'Soffio Acido (9d8)', 'Scalare'], description: 'Drago metallico buono adolescente. Ama scherzi e indovinelli.', color: 0xb87333, size: 2.0, shape: 'dragon' },
+  { id: 'young_gold', name: 'Drago d\'Oro Giovane', hp: 178, ac: 18, attackBonus: 10, damage: '2d10+6', damageType: 'piercing', xp: 5900, cr: '10', abilities: ['Multiattacco', 'Soffio Fuoco (10d10)', 'Anfibio', 'Cambia Forma'], description: 'Drago metallico buono adolescente. Nobile e saggio.', color: 0xffd700, size: 2.5, shape: 'dragon' },
+  { id: 'young_silver', name: 'Drago d\'Argento Giovane', hp: 168, ac: 18, attackBonus: 9, damage: '2d10+5', damageType: 'piercing', xp: 5000, cr: '9', abilities: ['Multiattacco', 'Soffio Gelo (12d8)', 'Camminare Nuvole', 'Cambia Forma'], description: 'Drago metallico buono adolescente. Protettore dell\'umanità.', color: 0xc0c0c0, size: 2.4, shape: 'dragon' },
 ];
 
 // ============ COMPONENT ============
@@ -418,6 +442,9 @@ export class CombatGame implements OnInit, OnDestroy {
           case 'giant':
             this.createGiant(scene, enemy.color, shadowColor, baseSize);
             break;
+          case 'dragon':
+            this.createDragon(scene, enemy.color, shadowColor, baseSize);
+            break;
         }
         
         // Add glowing eyes
@@ -570,6 +597,151 @@ export class CombatGame implements OnInit, OnDestroy {
         club.setAngle(20);
         
         this.enemyContainer.add([leftLeg, rightLeg, body, head, leftArm, rightArm, club]);
+      }
+      
+      createDragon(scene: any, color: number, shadow: number, size: number) {
+        const lighter = this.lightenColor(color, 0.3);
+        
+        // Wings (behind body)
+        const leftWing = scene.add.polygon(-size * 0.7, -size * 0.3, [
+          0, 0,
+          -size * 0.8, -size * 0.6,
+          -size * 0.6, -size * 0.3,
+          -size * 0.9, 0,
+          -size * 0.5, size * 0.1,
+          -size * 0.7, size * 0.3,
+          -size * 0.2, size * 0.2
+        ], shadow);
+        leftWing.setStrokeStyle(2, this.darkenColor(shadow, 0.7));
+        leftWing.setAngle(-15);
+        
+        const rightWing = scene.add.polygon(size * 0.2, -size * 0.4, [
+          0, 0,
+          size * 0.5, -size * 0.7,
+          size * 0.4, -size * 0.4,
+          size * 0.7, -size * 0.2,
+          size * 0.5, 0,
+          size * 0.6, size * 0.2,
+          size * 0.2, size * 0.1
+        ], color);
+        rightWing.setStrokeStyle(2, shadow);
+        rightWing.setAngle(10);
+        
+        // Tail (long and curved)
+        const tail = scene.add.polygon(size * 0.4, size * 0.3, [
+          0, 0,
+          size * 0.3, size * 0.1,
+          size * 0.6, size * 0.05,
+          size * 0.9, size * 0.15,
+          size * 1.1, size * 0.1,
+          size * 1.2, size * 0.2,  // Tail spike
+          size * 1.0, size * 0.15,
+          size * 0.7, size * 0.2,
+          size * 0.4, size * 0.15,
+          size * 0.1, size * 0.1
+        ], shadow);
+        tail.setStrokeStyle(2, this.darkenColor(shadow, 0.7));
+        
+        // Body (large oval)
+        const body = scene.add.ellipse(0, 0, size * 0.9, size * 0.6, color);
+        body.setStrokeStyle(3, shadow);
+        
+        // Belly scales (lighter)
+        const belly = scene.add.ellipse(0, size * 0.05, size * 0.5, size * 0.35, lighter);
+        belly.setStrokeStyle(1, color);
+        
+        // Neck
+        const neck = scene.add.ellipse(-size * 0.35, -size * 0.35, size * 0.25, size * 0.4, color);
+        neck.setStrokeStyle(2, shadow);
+        neck.setAngle(-20);
+        
+        // Head (triangular dragon head)
+        const head = scene.add.polygon(-size * 0.55, -size * 0.6, [
+          0, 0,
+          -size * 0.35, -size * 0.15,
+          -size * 0.4, size * 0.05,
+          -size * 0.25, size * 0.15,
+          0, size * 0.1,
+          size * 0.1, 0
+        ], color);
+        head.setStrokeStyle(2, shadow);
+        
+        // Snout
+        const snout = scene.add.triangle(
+          -size * 0.85, -size * 0.55,
+          0, size * 0.1,
+          -size * 0.2, -size * 0.05,
+          -size * 0.2, size * 0.15,
+          lighter
+        );
+        snout.setStrokeStyle(1, shadow);
+        
+        // Horns
+        const leftHorn = scene.add.triangle(
+          -size * 0.45, -size * 0.8,
+          0, size * 0.15,
+          -size * 0.08, 0,
+          size * 0.08, 0,
+          shadow
+        );
+        leftHorn.setAngle(-30);
+        
+        const rightHorn = scene.add.triangle(
+          -size * 0.35, -size * 0.75,
+          0, size * 0.12,
+          -size * 0.06, 0,
+          size * 0.06, 0,
+          shadow
+        );
+        rightHorn.setAngle(-10);
+        
+        // Front legs with claws
+        const leftLeg = scene.add.polygon(-size * 0.25, size * 0.35, [
+          0, 0,
+          -size * 0.08, size * 0.25,
+          -size * 0.12, size * 0.35,  // Claw
+          -size * 0.05, size * 0.3,
+          0, size * 0.35,  // Claw
+          size * 0.05, size * 0.3,
+          size * 0.08, size * 0.35,  // Claw
+          size * 0.08, size * 0.2,
+          0, size * 0.05
+        ], shadow);
+        
+        const rightLeg = scene.add.polygon(size * 0.2, size * 0.35, [
+          0, 0,
+          -size * 0.08, size * 0.25,
+          -size * 0.12, size * 0.35,
+          -size * 0.05, size * 0.3,
+          0, size * 0.35,
+          size * 0.05, size * 0.3,
+          size * 0.08, size * 0.35,
+          size * 0.08, size * 0.2,
+          0, size * 0.05
+        ], shadow);
+        
+        // Spines on back
+        const spines: any[] = [];
+        for (let i = 0; i < 4; i++) {
+          const spineX = -size * 0.2 + (i * size * 0.15);
+          const spine = scene.add.triangle(
+            spineX, -size * 0.35,
+            0, -size * 0.12,
+            -size * 0.04, 0,
+            size * 0.04, 0,
+            shadow
+          );
+          spine.setAngle(-10 + i * 5);
+          spines.push(spine);
+        }
+        
+        this.enemyContainer.add([
+          leftWing, rightWing, tail,
+          body, belly, neck, head, snout,
+          leftHorn, rightHorn,
+          ...spines,
+          leftLeg, rightLeg
+        ]);
       }
       
       darkenColor(color: number, factor: number): number {
@@ -1227,7 +1399,8 @@ export class CombatGame implements OnInit, OnDestroy {
       'humanoid': '👤',
       'beast': '🐺',
       'undead': '💀',
-      'giant': '🗿'
+      'giant': '🗿',
+      'dragon': '🐉'
     };
     return icons[enemy.shape] || '👹';
   }

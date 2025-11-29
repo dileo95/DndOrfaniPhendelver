@@ -1,0 +1,207 @@
+<div class="bestiary-container">
+  <!-- Header -->
+  <div class="header">
+    <button class="back-btn" (click)="goBack()">
+      <img src="./assets/img/back-arrow.png" alt="Back" />
+    </button>
+    <h1>📖 Bestiario</h1>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="🔍 Cerca creatura..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+
+    <div class="filter-row">
+      <select [ngModel]="selectedType()" (ngModelChange)="selectedType.set($event); selectedSubtype.set('all')">
+        @for (type of types; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+
+      @if (showDragonSubtypes()) {
+        <select [ngModel]="selectedSubtype()" (ngModelChange)="selectedSubtype.set($event)">
+          @for (subtype of dragonSubtypes; track subtype.value) {
+            <option [value]="subtype.value">{{ subtype.label }}</option>
+          }
+        </select>
+      }
+    </div>
+  </div>
+
+  <!-- Creature Grid -->
+  <div class="creature-grid">
+    @for (creature of filteredCreatures(); track creature.id) {
+      <div 
+        class="creature-card"
+        [style.border-color]="hexToRgba(creature.color, 0.6)"
+        [style.background]="'linear-gradient(135deg, ' + hexToRgba(creature.color, 0.15) + ' 0%, rgba(20, 15, 10, 0.9) 100%)'"
+        (click)="selectCreature(creature)"
+      >
+        <!-- Sprite Preview -->
+        <div class="creature-sprite" [style.background-color]="hexToRgba(creature.color, 0.3)">
+          @switch (creature.spriteType) {
+            @case ('dragon_wyrmling') {
+              <div class="dragon-sprite wyrmling" [style.color]="hexToRgba(creature.color, 1)">
+                🐲
+              </div>
+            }
+            @case ('dragon_young') {
+              <div class="dragon-sprite young" [style.color]="hexToRgba(creature.color, 1)">
+                🐉
+              </div>
+            }
+            @default {
+              <div class="type-icon">{{ getTypeIcon(creature.type) }}</div>
+            }
+          }
+        </div>
+
+        <!-- Info -->
+        <div class="creature-info">
+          <h3>{{ creature.name }}</h3>
+          <div class="creature-meta">
+            <span class="cr-badge" [style.background-color]="getCRColor(creature.cr)">
+              CR {{ creature.cr }}
+            </span>
+            <span class="size-badge">{{ getSizeLabel(creature.size) }}</span>
+          </div>
+          <p class="creature-desc">{{ creature.description }}</p>
+        </div>
+      </div>
+    } @empty {
+      <div class="no-results">
+        <p>🔍 Nessuna creatura trovata</p>
+      </div>
+    }
+  </div>
+
+  <!-- Creature Detail Modal -->
+  @if (selectedCreature(); as creature) {
+    <div class="modal-overlay" (click)="closeDetails()">
+      <div class="creature-detail" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeDetails()">×</button>
+
+        <!-- Header -->
+        <div class="detail-header" [style.background]="'linear-gradient(135deg, ' + hexToRgba(creature.color, 0.4) + ' 0%, rgba(20, 15, 10, 0.95) 100%)'">
+          <div class="detail-sprite">
+            @switch (creature.spriteType) {
+              @case ('dragon_wyrmling') {
+                <span class="dragon-icon wyrmling">🐲</span>
+              }
+              @case ('dragon_young') {
+                <span class="dragon-icon young">🐉</span>
+              }
+              @default {
+                <span class="type-icon-large">{{ getTypeIcon(creature.type) }}</span>
+              }
+            }
+          </div>
+          <div class="detail-title">
+            <h2>{{ creature.name }}</h2>
+            <p class="detail-type">
+              {{ getSizeLabel(creature.size) }} {{ creature.type }}
+              @if (creature.subtype) {
+                ({{ creature.subtype }})
+              }
+            </p>
+          </div>
+          <div class="detail-cr" [style.background-color]="getCRColor(creature.cr)">
+            <span class="cr-label">CR</span>
+            <span class="cr-value">{{ creature.cr }}</span>
+            <span class="xp-value">{{ creature.xp }} XP</span>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="detail-body">
+          <!-- Combat Stats -->
+          <div class="stat-section">
+            <h4>⚔️ Combattimento</h4>
+            <div class="combat-stats">
+              <div class="stat-box">
+                <span class="stat-label">HP</span>
+                <span class="stat-value">{{ creature.hp }}</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">CA</span>
+                <span class="stat-value">{{ creature.ac }}</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Velocità</span>
+                <span class="stat-value small">{{ creature.speed }}</span>
+              </div>
+            </div>
+            <div class="attack-info">
+              <p><strong>Attacco:</strong> +{{ creature.attackBonus }} al colpire</p>
+              <p><strong>Danno:</strong> {{ creature.damage }} {{ creature.damageType }}</p>
+            </div>
+          </div>
+
+          <!-- Ability Scores -->
+          <div class="stat-section">
+            <h4>📊 Caratteristiche</h4>
+            <div class="ability-scores">
+              <div class="ability">
+                <span class="ability-name">FOR</span>
+                <span class="ability-score">{{ creature.str }}</span>
+                <span class="ability-mod">{{ getModifier(creature.str) }}</span>
+              </div>
+              <div class="ability">
+                <span class="ability-name">DES</span>
+                <span class="ability-score">{{ creature.dex }}</span>
+                <span class="ability-mod">{{ getModifier(creature.dex) }}</span>
+              </div>
+              <div class="ability">
+                <span class="ability-name">COS</span>
+                <span class="ability-score">{{ creature.con }}</span>
+                <span class="ability-mod">{{ getModifier(creature.con) }}</span>
+              </div>
+              <div class="ability">
+                <span class="ability-name">INT</span>
+                <span class="ability-score">{{ creature.int }}</span>
+                <span class="ability-mod">{{ getModifier(creature.int) }}</span>
+              </div>
+              <div class="ability">
+                <span class="ability-name">SAG</span>
+                <span class="ability-score">{{ creature.wis }}</span>
+                <span class="ability-mod">{{ getModifier(creature.wis) }}</span>
+              </div>
+              <div class="ability">
+                <span class="ability-name">CAR</span>
+                <span class="ability-score">{{ creature.cha }}</span>
+                <span class="ability-mod">{{ getModifier(creature.cha) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Abilities -->
+          @if (creature.abilities && creature.abilities.length > 0) {
+            <div class="stat-section">
+              <h4>✨ Abilità Speciali</h4>
+              <ul class="abilities-list">
+                @for (ability of creature.abilities; track ability) {
+                  <li>{{ ability }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- Lore -->
+          @if (creature.lore) {
+            <div class="stat-section lore-section">
+              <h4>📜 Lore</h4>
+              <p class="lore-text">{{ creature.lore }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
