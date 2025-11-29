@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatabaseService, PlayerNote, DEFAULT_FOLDERS, NoteFolder } from '../../services/database.service';
 import { StoryParserService, StoryEntity } from '../../services/story-parser.service';
+import { ToastService } from '../../services/toast.service';
 
 type SortOption = 'newest' | 'oldest' | 'alphabetical';
 type ViewMode = 'grid' | 'list' | 'folders';
@@ -26,6 +27,7 @@ export const NOTE_COLORS = [
 })
 export class PlayerNotes implements OnInit {
   private platformId = inject(PLATFORM_ID);
+  private toast = inject(ToastService);
   @ViewChild('contentTextarea') contentTextarea!: ElementRef<HTMLTextAreaElement>;
   
   character = signal<string>('');
@@ -254,7 +256,7 @@ export class PlayerNotes implements OnInit {
     const content = this.noteContent().trim();
     
     if (!title || !content) {
-      alert('Titolo e contenuto sono obbligatori');
+      this.toast.warning('Titolo e contenuto sono obbligatori');
       return;
     }
 

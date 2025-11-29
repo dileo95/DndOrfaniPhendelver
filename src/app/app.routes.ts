@@ -16,6 +16,7 @@ import { StoryMap } from './components/story-map/story-map';
 import { Timeline } from './components/timeline/timeline';
 import { Forgotten } from './components/forgotten/forgotten';
 import { authGuard } from './guards/auth.guard';
+import { combatGuard } from './guards/combat.guard';
 
 export const routes: Routes = [
   {
@@ -55,7 +56,7 @@ export const routes: Routes = [
   {
     path: ':character/combat',
     component: CombatGame,
-    canActivate: [authGuard]
+    canActivate: [combatGuard]
   },
   {
     path: 'diary',

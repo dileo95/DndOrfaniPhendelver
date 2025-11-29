@@ -162,8 +162,24 @@ src/
 - [ ] Visual Novel con Ink.js per narrazione interattiva
 - [ ] Sprite per Auryn e Ravel
 
-### 💡 Combat Game - Miglioramenti Futuri
+## 🎯 Roadmap / TODO
+
+### 🎯 Priorità Alta (Prossimi Step)
+- [x] **Sistema di Riposo** - Short/Long rest per recuperare HP, spell slots, hit dice
+- [x] **Toast Notifications** - Sostituire alert() con notifiche eleganti
+- [x] **Statistiche Combat** - Riepilogo post-combattimento (danni inflitti/subiti, round)
+
+### 🟢 Quick Wins (Piccoli miglioramenti)
+- [ ] Storico dei tiri di dado nella sessione
+- [ ] Badge PWA sull'icona per notifiche
+- [ ] Migliorare keyboard navigation e accessibilità
 - [ ] Suoni effetti (attacchi, magie, hit, miss, vittoria)
+
+### 🟡 Feature Medie
+- [ ] Inventario migliorato - Drag & drop, filtri, peso totale con encumbrance
+- [ ] Bestiary - Pagina dedicata con tutti i nemici, lore e statistiche
+- [ ] Achievements - Badge/trofei per traguardi (es. "Prima vittoria", "100 tiri")
+- [ ] Export/Import - Scheda personaggio in PDF o JSON
 - [ ] Difficoltà dinamica - suggerire nemici in base al livello PG
 - [ ] Multi-attacco per alcuni nemici (Gufolorso, Ghast)
 - [ ] Condizioni di stato (Paralisi Ghoul, Fetore Ghast)
@@ -171,15 +187,25 @@ src/
 - [ ] Storico combattimenti (visualizza dal DB)
 - [ ] Sistema Loot/Ricompense dopo vittoria
 
-### 💡 Idee Future
-- [ ] Multiplayer sync tramite Firebase
-- [ ] Dice roller con cronologia
-- [ ] Sistema di achievements
-- [ ] Note condivise tra giocatori
+### 🔴 Feature Avanzate (Alto impegno)
+- [ ] Encounter Builder - Creare scontri personalizzati con più nemici
+- [ ] Initiative Tracker - Gestione turni con più combattenti
+- [ ] Spell Effects - Applicare condizioni durante il combattimento
+- [ ] Campaign Journal - Timeline delle sessioni con date reali
+- [ ] Voice Commands - "Tira un d20" con Web Speech API
+- [ ] Sync Cloud - Sincronizzazione tra dispositivi (Firebase/Supabase)
+- [ ] Multiplayer Notes - Note condivise tra giocatori
+
+### 🛠️ Technical Debt / Ottimizzazioni
+- [ ] Lazy loading per componenti pesanti (Phaser, D3)
+- [ ] Aumentare copertura unit/e2e test
+- [ ] Analizzare bundle size con source-map-explorer
+- [ ] Open Graph tags per condivisione social
+- [ ] Global error boundary con reporting
+
+### 💡 Altre Idee
 - [ ] Mappa interattiva di Phendelver
-- [ ] Inventory system
 - [ ] Quest tracker
-- [ ] Export scheda personaggio in PDF
 - [ ] Gestione spell slots nella scheda
 
 ## 🎨 Credits

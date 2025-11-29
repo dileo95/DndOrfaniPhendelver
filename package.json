@@ -16,7 +16,7 @@
     "electron": "electron .",
     "electron:build": "ng build --configuration electron && electron .",
     "electron:package": "ng build --configuration electron && electron-builder",
-    "electron:package:win": "ng build --configuration electron && electron-builder --win",
+    "electron:package:win": "ng build --configuration electron && electron-builder --win --dir && node apply-icon.js && electron-builder --win --prepackaged release/win-unpacked",
     "electron:package:mac": "ng build --configuration electron && electron-builder --mac",
     "electron:package:linux": "ng build --configuration electron && electron-builder --linux"
   },
@@ -33,19 +33,36 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "public/dragon-icon-512x512.png",
-      "signAndEditExecutable": false,
-      "verifyUpdateCodeSignature": false
+      "icon": "public/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "signAndEditExecutable": false
     },
     "mac": {
       "target": "dmg",
-      "icon": "public/dragon-icon-512x512.png"
+      "icon": "public/icon.icns"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "public/dragon-icon-512x512.png",
+      "icon": "public/icon.png",
       "category": "Game"
-    }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico",
+      "installerHeader": "public/installerHeader.bmp",
+      "installerSidebar": "public/installerSidebar.bmp",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Phendelver"
+    },
+    "extraResources": [
+      {
+        "from": "public/icon.ico",
+        "to": "icon.ico"
+      }
+    ]
   },
   "prettier": {
     "printWidth": 100,
@@ -97,6 +114,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "rcedit": "^5.0.2",
     "typescript": "~5.9.2"
   }
 }

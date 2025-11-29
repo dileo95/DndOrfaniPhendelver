@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, viewChildren, ElementRef } from '@angular/core';
+import { Component, OnInit, signal, viewChildren, ElementRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Auth, Character } from '../../services/auth';
 import { Scroll } from '../../services/scroll';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-intro',
@@ -11,6 +12,9 @@ import { Scroll } from '../../services/scroll';
   styleUrl: './intro.scss',
 })
 export class Intro implements OnInit {
+  // Toast service
+  private toast = inject(ToastService);
+  
   // Signals per gestire lo stato delle animazioni
   showWelcome = signal(false);
   showQuestion = signal(false);
@@ -97,7 +101,7 @@ export class Intro implements OnInit {
       // Naviga alla home del personaggio
       this.router.navigate([character.route, 'home']);
     } else {
-      alert('PIN errato! Riprova.');
+      this.toast.error('PIN errato! Riprova.');
       this.resetPin();
     }
   }

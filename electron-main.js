@@ -37,12 +37,22 @@ function startServer() {
 }
 
 function createWindow() {
+  // Determina il percorso dell'icona in base all'ambiente
+  let iconPath;
+  if (app.isPackaged) {
+    // In produzione (app installata)
+    iconPath = path.join(process.resourcesPath, 'icon.ico');
+  } else {
+    // In sviluppo
+    iconPath = path.join(__dirname, 'public/icon.ico');
+  }
+  
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    icon: path.join(__dirname, 'dist/angular-phendelver/browser/assets/icons/icon-512x512.png'),
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

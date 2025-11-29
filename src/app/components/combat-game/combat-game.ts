@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, signal, computed, PLATFORM_ID, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, signal, computed, PLATFORM_ID, Inject, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatabaseService, CharacterSheet as Sheet, Weapon, Spell } from '../../services/database.service';
+import { ToastService } from '../../services/toast.service';
 
 // Phaser will be imported dynamically only in browser
 let Phaser: any;
@@ -81,6 +82,14 @@ export class CombatGame implements OnInit, OnDestroy {
   // Combat log
   combatLog = signal<string[]>([]);
   
+  // Combat Statistics
+  totalDamageDealt = signal<number>(0);
+  totalDamageTaken = signal<number>(0);
+  criticalHits = signal<number>(0);
+  missedAttacks = signal<number>(0);
+  spellsCast = signal<number>(0);
+  potionsUsed = signal<number>(0);
+  
   // Selected action
   selectedWeapon = signal<Weapon | null>(null);
   selectedSpell = signal<Spell | null>(null);
@@ -102,9 +111,24 @@ export class CombatGame implements OnInit, OnDestroy {
     return s.spells.filter(spell => spell.prepared !== false);
   });
   
+  // Verifica se il combattimento può iniziare
+  canStartCombat = computed(() => {
+    const s = this.sheet();
+    if (!s) return { canStart: false, reason: 'Scheda personaggio non trovata' };
+    if (this.playerHP() <= 0) return { canStart: false, reason: 'Sei a 0 punti ferita! Riposa prima di combattere.' };
+    if (!this.selectedEnemy()) return { canStart: false, reason: 'Seleziona un nemico' };
+    return { canStart: true, reason: '' };
+  });
+  
+  // Flag per sapere se la scheda esiste nel database
+  sheetExists = signal<boolean>(false);
+  
   // Phaser
   private game: any = null;
   private scene: any = null;
+  
+  // Toast service
+  private toast = inject(ToastService);
 
   constructor(
     private route: ActivatedRoute,
@@ -121,6 +145,7 @@ export class CombatGame implements OnInit, OnDestroy {
   async loadSheet() {
     const sheet = await this.db.getCharacterSheet(this.character());
     this.sheet.set(sheet || null);
+    this.sheetExists.set(!!sheet);
     
     if (sheet) {
       this.playerHP.set(sheet.currentHP);
@@ -140,12 +165,25 @@ export class CombatGame implements OnInit, OnDestroy {
   }
 
   async startCombat() {
-    if (!this.selectedEnemy() || !this.sheet()) return;
+    const combatCheck = this.canStartCombat();
+    if (!combatCheck.canStart) {
+      // Mostra messaggio di errore all'utente
+      this.toast.warning(combatCheck.reason);
+      return;
+    }
     
     this.gamePhase.set('combat');
     this.currentRound.set(1);
     this.isPlayerTurn.set(true);
     this.combatLog.set([]);
+    
+    // Reset combat statistics
+    this.totalDamageDealt.set(0);
+    this.totalDamageTaken.set(0);
+    this.criticalHits.set(0);
+    this.missedAttacks.set(0);
+    this.spellsCast.set(0);
+    this.potionsUsed.set(0);
     
     this.addLog(`⚔️ Combattimento iniziato! Round 1`);
     this.addLog(`${this.getPlayerName()} vs ${this.selectedEnemy()!.name}`);
@@ -893,15 +931,18 @@ export class CombatGame implements OnInit, OnDestroy {
     
     if (isMiss) {
       this.addLog(`❌ Fallimento critico!`);
+      this.missedAttacks.update(m => m + 1);
     } else if (isCrit || attackRoll >= enemy.ac) {
       // Hit!
       let damage = this.rollDamage(weapon.damage);
       if (isCrit) {
         damage = damage * 2;
         this.addLog(`💥 CRITICO! Danni raddoppiati!`);
+        this.criticalHits.update(c => c + 1);
       }
       
       this.enemyHP.update(hp => Math.max(0, hp - damage));
+      this.totalDamageDealt.update(d => d + damage);
       this.addLog(`✅ Colpito! ${damage} danni ${weapon.damageType}`);
       
       if (this.scene) this.scene.shakeEnemy();
@@ -912,6 +953,7 @@ export class CombatGame implements OnInit, OnDestroy {
       }
     } else {
       this.addLog(`❌ Mancato! (CA ${enemy.ac})`);
+      this.missedAttacks.update(m => m + 1);
     }
     
     this.endPlayerTurn();
@@ -936,12 +978,14 @@ export class CombatGame implements OnInit, OnDestroy {
     }
     
     this.addLog(`✨ ${this.getPlayerName()} lancia ${spell.name}!`);
+    this.spellsCast.update(s => s + 1);
     
     // Simple damage spell logic
     if (spell.level === 0) {
       // Cantrip - no slot needed
       const damage = this.rollDamage(this.getCantripDamage(spell, sheet.level));
       this.enemyHP.update(hp => Math.max(0, hp - damage));
+      this.totalDamageDealt.update(d => d + damage);
       this.addLog(`💫 ${damage} danni magici!`);
       
       if (this.scene) this.scene.flashEnemy();
@@ -956,6 +1000,7 @@ export class CombatGame implements OnInit, OnDestroy {
       // Use slot
       const damage = this.rollDamage(this.getSpellDamage(spell));
       this.enemyHP.update(hp => Math.max(0, hp - damage));
+      this.totalDamageDealt.update(d => d + damage);
       this.addLog(`💫 ${damage} danni! (Slot lvl ${spell.level} usato)`);
       
       if (this.scene) this.scene.flashEnemy();
@@ -985,6 +1030,7 @@ export class CombatGame implements OnInit, OnDestroy {
     
     const healing = this.rollDamage('2d4+2');
     this.playerHP.update(hp => Math.min(this.playerMaxHP(), hp + healing));
+    this.potionsUsed.update(p => p + 1);
     this.addLog(`🧪 ${this.getPlayerName()} beve una pozione! Recupera ${healing} HP`);
     
     if (this.scene) this.scene.showHealEffect();
@@ -1029,6 +1075,7 @@ export class CombatGame implements OnInit, OnDestroy {
       }
       
       this.playerHP.update(hp => Math.max(0, hp - damage));
+      this.totalDamageTaken.update(d => d + damage);
       this.addLog(`💔 Subisci ${damage} danni ${enemy.damageType}!`);
       
       if (this.scene) {
@@ -1069,6 +1116,16 @@ export class CombatGame implements OnInit, OnDestroy {
     this.addLog(`${enemy.name} sconfitto!`);
     this.addLog(`Guadagni ${enemy.xp} XP!`);
     
+    // Combat statistics
+    this.addLog(`\n📊 STATISTICHE COMBATTIMENTO:`);
+    this.addLog(`⚔️ Danni inflitti: ${this.totalDamageDealt()}`);
+    this.addLog(`💔 Danni subiti: ${this.totalDamageTaken()}`);
+    this.addLog(`🎯 Round totali: ${this.currentRound()}`);
+    if (this.criticalHits() > 0) this.addLog(`💥 Colpi critici: ${this.criticalHits()}`);
+    if (this.missedAttacks() > 0) this.addLog(`❌ Attacchi mancati: ${this.missedAttacks()}`);
+    if (this.spellsCast() > 0) this.addLog(`✨ Incantesimi lanciati: ${this.spellsCast()}`);
+    if (this.potionsUsed() > 0) this.addLog(`🧪 Pozioni usate: ${this.potionsUsed()}`);
+    
     if (this.scene) {
       this.scene.enemyDeath();
       this.scene.showVictory();
@@ -1083,6 +1140,14 @@ export class CombatGame implements OnInit, OnDestroy {
     
     this.addLog(`\n💀 SCONFITTA!`);
     this.addLog(`${this.getPlayerName()} è caduto in battaglia...`);
+    
+    // Combat statistics
+    this.addLog(`\n📊 STATISTICHE COMBATTIMENTO:`);
+    this.addLog(`⚔️ Danni inflitti: ${this.totalDamageDealt()}`);
+    this.addLog(`💔 Danni subiti: ${this.totalDamageTaken()}`);
+    this.addLog(`🎯 Round totali: ${this.currentRound()}`);
+    if (this.criticalHits() > 0) this.addLog(`💥 Colpi critici: ${this.criticalHits()}`);
+    if (this.spellsCast() > 0) this.addLog(`✨ Incantesimi lanciati: ${this.spellsCast()}`);
     
     // Save combat result
     this.saveCombatResult('defeat');

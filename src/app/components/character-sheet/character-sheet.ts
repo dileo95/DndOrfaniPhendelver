@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatabaseService, CharacterSheet as Sheet, Weapon, Spell, CharacterClass, Currency, EquipmentItem, DeathSaves } from '../../services/database.service';
+import { ToastService } from '../../services/toast.service';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -13,6 +14,8 @@ import html2canvas from 'html2canvas';
   styleUrl: './character-sheet.scss',
 })
 export class CharacterSheet implements OnInit {
+  private toast = inject(ToastService);
+  
   character = signal<string>('');
   sheet = signal<Sheet | null>(null);
   editMode = signal(false);
@@ -474,7 +477,7 @@ export class CharacterSheet implements OnInit {
 
     await this.db.saveCharacterSheet(this.sheet()!);
     this.editMode.set(false);
-    alert('Scheda salvata!');
+    this.toast.success('Scheda salvata con successo!');
   }
 
   calcModifier(score: number): number {
@@ -595,23 +598,26 @@ export class CharacterSheet implements OnInit {
     if (!sheet) return;
 
     // Ripristina HP
+    const hpRestored = sheet.maxHP - sheet.currentHP;
     sheet.currentHP = sheet.maxHP;
     sheet.temporaryHP = 0;
     
     // Ripristina dadi vita (metà del totale, minimo 1)
     const totalHitDice = this.getTotalLevel();
     const diceToRestore = Math.max(1, Math.floor(totalHitDice / 2));
-    sheet.hitDiceRemaining = Math.min(
-      (sheet.hitDiceRemaining || 0) + diceToRestore,
-      totalHitDice
-    );
+    const previousDice = sheet.hitDiceRemaining || 0;
+    sheet.hitDiceRemaining = Math.min(previousDice + diceToRestore, totalHitDice);
+    const diceRestored = sheet.hitDiceRemaining - previousDice;
     
     // Reset death saves
     sheet.deathSaves = { successes: 0, failures: 0 };
     
     // Ripristina spell slots
+    let slotsRestored = 0;
     if (sheet.spellSlots) {
       for (const level in sheet.spellSlots) {
+        const restored = sheet.spellSlots[level].max - sheet.spellSlots[level].current;
+        slotsRestored += restored;
         sheet.spellSlots[level].current = sheet.spellSlots[level].max;
       }
     }
@@ -623,7 +629,14 @@ export class CharacterSheet implements OnInit {
 
     this.sheet.set({ ...sheet });
     await this.db.saveCharacterSheet(sheet);
-    alert('Long Rest completato! HP, spell slots e dadi vita ripristinati.');
+    
+    // Toast con riepilogo
+    let message = `🌙 Long Rest completato!`;
+    if (hpRestored > 0) message += ` +${hpRestored} HP`;
+    if (diceRestored > 0) message += ` +${diceRestored} dadi vita`;
+    if (slotsRestored > 0) message += ` +${slotsRestored} slot`;
+    
+    this.toast.success(message, 4000);
   }
 
   goBack() {
@@ -1519,7 +1532,7 @@ export class CharacterSheet implements OnInit {
       if (sheet.deathSaves.successes >= 3) {
         this.resetDeathSaves();
         sheet.currentHP = 1;
-        alert('Personaggio stabilizzato! 🎉');
+        this.toast.success('Personaggio stabilizzato! 🎉');
       }
       
       this.sheet.set({ ...sheet });
@@ -1540,7 +1553,7 @@ export class CharacterSheet implements OnInit {
       
       // 3 fallimenti = morte
       if (sheet.deathSaves.failures >= 3) {
-        alert('Il personaggio è morto! 💀');
+        this.toast.error('Il personaggio è morto! 💀', 5000);
       }
       
       this.sheet.set({ ...sheet });
@@ -1564,7 +1577,7 @@ export class CharacterSheet implements OnInit {
     if (!sheet) return;
 
     if (!sheet.hitDiceRemaining || sheet.hitDiceRemaining <= 0) {
-      alert('Non hai dadi vita disponibili!');
+      this.toast.warning('Non hai dadi vita disponibili!');
       return;
     }
 
@@ -1579,22 +1592,34 @@ export class CharacterSheet implements OnInit {
     const healing = Math.max(1, roll + this.conModifier());
     
     sheet.hitDiceRemaining--;
+    const oldHP = sheet.currentHP;
     sheet.currentHP = Math.min(sheet.currentHP + healing, sheet.maxHP);
+    const actualHealing = sheet.currentHP - oldHP;
     
     this.sheet.set({ ...sheet });
-    alert(`Hai tirato ${roll} + ${this.conModifier()} CON = ${healing} HP recuperati!`);
+    this.toast.success(`🎲 Dado vita: ${roll} + ${this.conModifier()} CON = +${actualHealing} HP`);
   }
 
-  /** Short rest - permette di usare dadi vita */
+  /** Short rest - permette di usare dadi vita e ripristina alcune risorse */
   async shortRest() {
     const sheet = this.sheet();
     if (!sheet) return;
 
-    // Ripristina risorse short rest (come Action Surge, Second Wind, ecc.)
-    // L'utente può usare hit dice manualmente
+    // Ripristina pact magic (Warlock)
+    let pactRestored = 0;
+    if (sheet.pactMagic && sheet.pactMagic.slotsCurrent < sheet.pactMagic.slotsMax) {
+      pactRestored = sheet.pactMagic.slotsMax - sheet.pactMagic.slotsCurrent;
+      sheet.pactMagic.slotsCurrent = sheet.pactMagic.slotsMax;
+    }
     
+    this.sheet.set({ ...sheet });
     await this.db.saveCharacterSheet(sheet);
-    alert('Short Rest completato! Puoi usare i dadi vita per recuperare HP.');
+    
+    let message = `☕ Short Rest completato!`;
+    if (pactRestored > 0) message += ` +${pactRestored} slot Pact Magic`;
+    message += ` Puoi usare i dadi vita per recuperare HP.`;
+    
+    this.toast.info(message, 4000);
   }
 
   // === INVENTORY & CURRENCY ===
@@ -1703,7 +1728,7 @@ export class CharacterSheet implements OnInit {
     // Controlla se può salire di livello
     const xpForNext = this.getXPForNextLevel();
     if (sheet.experience >= xpForNext && this.getTotalLevel() < 20) {
-      alert(`Hai abbastanza XP per salire di livello! (${sheet.experience}/${xpForNext})`);
+      this.toast.info(`🎉 Hai abbastanza XP per salire di livello! (${sheet.experience}/${xpForNext})`);
     }
     
     this.sheet.set({ ...sheet });
@@ -1719,8 +1744,9 @@ export class CharacterSheet implements OnInit {
     if (sheet.pactMagic.slotsCurrent > 0) {
       sheet.pactMagic.slotsCurrent--;
       this.sheet.set({ ...sheet });
+      this.toast.info(`Slot Pact Magic usato (${sheet.pactMagic.slotsCurrent}/${sheet.pactMagic.slotsMax})`);
     } else {
-      alert('Non hai slot pact magic disponibili!');
+      this.toast.warning('Non hai slot pact magic disponibili!');
     }
   }
 
@@ -1731,6 +1757,7 @@ export class CharacterSheet implements OnInit {
 
     sheet.pactMagic.slotsCurrent = sheet.pactMagic.slotsMax;
     this.sheet.set({ ...sheet });
+    this.toast.success('Slot Pact Magic ripristinati!');
   }
 
   /** Usa uno spell slot normale */
@@ -1741,8 +1768,9 @@ export class CharacterSheet implements OnInit {
     if (sheet.spellSlots[level].current > 0) {
       sheet.spellSlots[level].current--;
       this.sheet.set({ ...sheet });
+      this.toast.info(`Slot livello ${level} usato (${sheet.spellSlots[level].current}/${sheet.spellSlots[level].max})`);
     } else {
-      alert(`Non hai slot di livello ${level} disponibili!`);
+      this.toast.warning(`Non hai slot di livello ${level} disponibili!`);
     }
   }
 
@@ -1810,13 +1838,13 @@ export class CharacterSheet implements OnInit {
   useInspiration() {
     const sheet = this.sheet();
     if (!sheet?.inspiration) {
-      alert('Non hai ispirazione!');
+      this.toast.warning('Non hai ispirazione!');
       return;
     }
 
     sheet.inspiration = false;
     this.sheet.set({ ...sheet });
-    alert('Ispirazione usata! Puoi ritirare un d20.');
+    this.toast.success('Ispirazione usata! Puoi ritirare un d20.');
   }
 
 

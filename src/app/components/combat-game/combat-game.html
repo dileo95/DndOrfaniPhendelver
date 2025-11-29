@@ -51,9 +51,32 @@
         }
       </div>
       
+      <!-- Player Status Warning -->
+      @if (playerHP() <= 0) {
+        <div class="warning-banner">
+          <span class="warning-icon">💀</span>
+          <span>Sei a 0 punti ferita! Devi riposarti prima di poter combattere.</span>
+        </div>
+      }
+      
+      @if (!sheetExists()) {
+        <div class="warning-banner info">
+          <span class="warning-icon">📋</span>
+          <span>Scheda personaggio non trovata. Vai alla scheda personaggio per crearla.</span>
+        </div>
+      }
+      
       @if (selectedEnemy()) {
-        <button class="btn-start" (click)="startCombat()">
-          ⚔️ Inizia Combattimento vs {{ selectedEnemy()!.name }}
+        <button 
+          class="btn-start" 
+          [class.disabled]="!canStartCombat().canStart"
+          [disabled]="!canStartCombat().canStart"
+          (click)="startCombat()">
+          @if (canStartCombat().canStart) {
+            ⚔️ Inizia Combattimento vs {{ selectedEnemy()!.name }}
+          } @else {
+            🚫 {{ canStartCombat().reason }}
+          }
         </button>
       }
     </div>
