@@ -26,6 +26,18 @@
   }
 }
 
+// Bastion Tracker - stile speciale
+.bastion-button {
+  background: linear-gradient(135deg, #2c1810 0%, #1a1a2e 50%, #16213e 100%) !important;
+  border: 2px solid rgba(212, 175, 55, 0.8) !important;
+  
+  &:hover {
+    background: linear-gradient(135deg, #3d2517 0%, #1a1a2e 50%, #16213e 100%) !important;
+    border-color: #d4af37 !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.3) !important;
+  }
+}
+
 // Personaggi in sviluppo - stile speciale con immagine
 .auryn-button {
   background: url('../../../assets/img/auryn-face.png') !important;

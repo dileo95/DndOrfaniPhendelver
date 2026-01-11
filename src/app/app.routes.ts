@@ -82,6 +82,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/bestiary/bestiary').then(m => m.Bestiary)
   },
   {
+    path: 'diary/bastion',
+    loadComponent: () => import('./components/bastion/bastion').then(m => m.BastionComponent)
+  },
+  {
     path: 'cracks',
     component: Cracks
   },

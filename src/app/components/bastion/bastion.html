@@ -1,0 +1,1637 @@
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left"></div>
+  <div class="header-title">
+    <h1>🏰 Bastion Tracker</h1>
+  </div>
+  <div class="header-right"></div>
+  <button class="back" (click)="goBack()">
+    <img src="./assets/img/back-arrow.png" alt="Back" />
+  </button>
+</div>
+
+<!-- LOADING -->
+@if (isLoading()) {
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Caricamento bastion...</p>
+  </div>
+}
+
+<!-- MAIN CONTENT -->
+@if (!isLoading() && bastion()) {
+  <div class="bastion-container">
+    
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-item gold-stat">
+        <span class="stat-icon">💰</span>
+        <span class="stat-value">{{ bastion()!.gold | number }}</span>
+        <span class="stat-label">GP</span>
+        <div class="gold-buttons">
+          <button class="gold-btn minus" (click)="openAddGold(false)">−</button>
+          <button class="gold-btn plus" (click)="openAddGold(true)">+</button>
+        </div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">👥</span>
+        <span class="stat-value">{{ bastion()!.owners.length }}</span>
+        <span class="stat-label">PG</span>
+      </div>
+      <div class="stat-item slots-stat">
+        <span class="stat-icon">🏠</span>
+        <span class="stat-value">{{ usedSlots() }}/{{ totalSlots() }}</span>
+        <span class="stat-label">Facility</span>
+        <div class="slot-progress">
+          <div class="slot-progress-bar" [style.width.%]="slotPercentage()"></div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">📅</span>
+        <span class="stat-value">{{ bastion()!.currentTurn }}</span>
+        <span class="stat-label">Turno</span>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'overview'"
+        (click)="setTab('overview')">
+        🏰 Panoramica
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'owners'"
+        (click)="setTab('owners')">
+        👥 Personaggi
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'facilities'"
+        (click)="setTab('facilities')">
+        🏠 Facility
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'hirelings'"
+        (click)="setTab('hirelings')">
+        🧑‍🤝‍🧑 Hirelings
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'events'"
+        (click)="setTab('events')">
+        🎲 Eventi
+        @if (getUnresolvedEvents().length > 0) {
+          <span class="badge">{{ getUnresolvedEvents().length }}</span>
+        }
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'treasury'"
+        (click)="setTab('treasury')">
+        💰 Tesoreria
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'trophies'"
+        (click)="setTab('trophies')">
+        🏆 Trofei
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'stats'"
+        (click)="setTab('stats')">
+        📊 Statistiche
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'calendar'"
+        (click)="setTab('calendar')">
+        📅 Calendario
+      </button>
+      <button 
+        class="tab" 
+        [class.active]="activeTab() === 'defenders'"
+        (click)="setTab('defenders')">
+        ⚔️ Difensori ({{ defenderCount() }})
+      </button>
+    </div>
+
+    <!-- TAB CONTENT -->
+    <div class="tab-content">
+      
+      <!-- OVERVIEW TAB -->
+      @if (activeTab() === 'overview') {
+        <div class="overview-section">
+          <div class="bastion-header-card">
+            <h2 class="bastion-name">{{ bastion()!.name }}</h2>
+            @if (bastion()!.location) {
+              <p class="bastion-location">📍 {{ bastion()!.location }}</p>
+            }
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="quick-stats-grid">
+            <div class="quick-stat">
+              <span class="quick-stat-number">{{ bastion()!.owners.length }}</span>
+              <span class="quick-stat-label">Proprietari</span>
+            </div>
+            <div class="quick-stat">
+              <span class="quick-stat-number">{{ bastion()!.facilities.length }}</span>
+              <span class="quick-stat-label">Facility</span>
+            </div>
+            <div class="quick-stat">
+              <span class="quick-stat-number">{{ bastion()!.hirelings.length }}</span>
+              <span class="quick-stat-label">Hirelings</span>
+            </div>
+            <div class="quick-stat">
+              <span class="quick-stat-number">Lv.{{ maxLevel() }}</span>
+              <span class="quick-stat-label">Max Livello</span>
+            </div>
+          </div>
+
+          <!-- CASTLE VIEW - Bastion Layout -->
+          <div class="castle-container">
+            <div class="castle-header">
+              <div class="tower tower-left">🏰</div>
+              <div class="castle-title">
+                <span class="castle-name">{{ bastion()!.name }}</span>
+                <span class="castle-turn">Turno {{ bastion()!.currentTurn }}</span>
+              </div>
+              <div class="tower tower-right">🏰</div>
+            </div>
+            
+            <div class="castle-walls">
+              <div class="merlon"></div>
+              <div class="merlon"></div>
+              <div class="merlon"></div>
+              <div class="merlon"></div>
+              <div class="merlon"></div>
+              <div class="merlon"></div>
+              <div class="merlon"></div>
+            </div>
+            
+            <div class="castle-body">
+              @if (bastion()!.facilities.length === 0) {
+                <div class="castle-empty">
+                  <span class="empty-icon">🏗️</span>
+                  <p>Il castello è vuoto</p>
+                  <p class="hint">Aggiungi personaggi e costruisci le stanze!</p>
+                </div>
+              } @else {
+                <div class="castle-rooms">
+                  @for (facility of bastion()!.facilities; track facility.id) {
+                    <div 
+                      class="castle-room" 
+                      [class.has-order]="facility.currentOrder"
+                      [class.is-barracks]="facility.type === 'barracks'"
+                      [style.--owner-color]="getOwnerById(facility.ownerId)?.color || '#d4af37'"
+                      (click)="openFacilityDetail(facility)">
+                      <div class="room-roof"></div>
+                      <div class="room-content">
+                        <span class="room-icon">{{ getFacilityDef(facility.type)?.icon }}</span>
+                        <span class="room-name">{{ facility.customName || getFacilityDef(facility.type)?.nameIt }}</span>
+                        @if (facility.currentOrder) {
+                          <span class="room-order-indicator" title="Ordine in corso">⏳</span>
+                        }
+                      </div>
+                      <div class="room-floor">
+                        @if (facility.type === 'barracks') {
+                          <div class="room-defenders">
+                            @for (i of getDefenderIconsForBarracks(); track i) {
+                              <span class="defender-icon">👤</span>
+                            }
+                            @if (defenderCount() === 0) {
+                              <span class="no-defenders">-</span>
+                            }
+                          </div>
+                        } @else {
+                          <div class="room-hirelings">
+                            @for (h of getHirelingsForFacility(facility.id).slice(0, 4); track h.id) {
+                              <span class="hireling-mini">👷</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+            
+            <div class="castle-foundation">
+             
+              <div class="defenders-summary">
+                <span class="defenders-icon">⚔️</span>
+                <span class="defenders-count">{{ defenderCount() }} Difensori</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="overview-actions">
+            <button class="action-btn primary" (click)="openModal('add-owner')">
+              ➕ Aggiungi PG
+            </button>
+            <button class="action-btn" (click)="advanceTurn()">
+              ⏭️ Prossimo Turno
+            </button>
+            <button class="action-btn event-btn" (click)="rollRandomEvent()">
+              🎲 Tira Evento
+            </button>
+          </div>
+
+          <!-- Unresolved Events Alert -->
+          @if (getUnresolvedEvents().length > 0) {
+            <div class="events-alert">
+              <h4>⚠️ Eventi in Sospeso ({{ getUnresolvedEvents().length }})</h4>
+              <div class="events-mini-list">
+                @for (event of getUnresolvedEvents().slice(0, 3); track event.id) {
+                  <div class="event-mini" (click)="openEventDetail(event)">
+                    <span class="event-type-icon">{{ getEventTypeIcon(event.type) }}</span>
+                    <span class="event-title">{{ event.title }}</span>
+                  </div>
+                }
+              </div>
+              @if (getUnresolvedEvents().length > 3) {
+                <button class="see-all-btn" (click)="setTab('events')">
+                  Vedi tutti →
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Active Orders -->
+          @if (activeOrders().length > 0) {
+            <div class="active-orders-section">
+              <h4>📜 Ordini Attivi ({{ activeOrders().length }})</h4>
+              <div class="orders-list">
+                @for (activeOrder of activeOrders(); track activeOrder.order.id) {
+                  <div class="order-card">
+                    <div class="order-header">
+                      <span class="order-facility">{{ activeOrder.facility.customName || getFacilityDef(activeOrder.facility.type)?.name }}</span>
+                      <span class="order-type">{{ getOrderTypeName(activeOrder.order.type) }}</span>
+                    </div>
+                    <div class="order-description">{{ activeOrder.order.description }}</div>
+                    <div class="order-progress">
+                      <div class="progress-bar">
+                        <div class="progress-fill" 
+                             [style.width.%]="getOrderProgress(activeOrder.order)">
+                        </div>
+                      </div>
+                      <span class="turns-remaining">
+                        {{ activeOrder.turnsRemaining }} turni rimanenti
+                      </span>
+                    </div>
+                    <div class="order-actions">
+                      <button class="complete-btn" (click)="completeOrderFromActive(activeOrder)">
+                        ✅ Completa
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- OWNERS TAB -->
+      @if (activeTab() === 'owners') {
+        <div class="owners-section">
+          <div class="section-header">
+            <h3>👥 Personaggi del Bastion</h3>
+            <button class="add-btn" (click)="openModal('add-owner')">
+              ➕ Aggiungi
+            </button>
+          </div>
+
+          @if (bastion()!.owners.length === 0) {
+            <div class="empty-state">
+              <p>👤 Nessun personaggio</p>
+              <p class="empty-hint">Aggiungi il primo personaggio per iniziare!</p>
+            </div>
+          } @else {
+            <div class="owners-grid">
+              @for (owner of bastion()!.owners; track owner.id) {
+                <div class="owner-card" [style.border-color]="owner.color">
+                  <div class="owner-header">
+                    <div class="owner-avatar" [style.background-color]="owner.color">
+                      @if (owner.icon) {
+                        {{ owner.icon }}
+                      } @else {
+                        {{ owner.name.charAt(0).toUpperCase() }}
+                      }
+                    </div>
+                    <div class="owner-info">
+                      <h4>{{ owner.name }}</h4>
+                      @if (owner.class) {
+                        <span class="owner-class">{{ owner.class }}</span>
+                      }
+                    </div>
+                    <div class="owner-level" [style.background-color]="getLevelColor(owner.level)">
+                      Lv.{{ owner.level }}
+                    </div>
+                  </div>
+                  
+                  <div class="owner-stats">
+                    <div class="owner-stat">
+                      <span class="stat-icon">🏠</span>
+                      <span>{{ getOwnerFacilitiesCount(owner.id) }}/{{ owner.maxFacilities }}</span>
+                    </div>
+                  </div>
+
+                  <div class="owner-facilities">
+                    @for (facility of getFacilitiesForOwner(owner.id); track facility.id) {
+                      <span class="mini-facility" (click)="openFacilityDetail(facility)">
+                        {{ getFacilityDef(facility.type)?.icon }}
+                      </span>
+                    }
+                  </div>
+
+                  <div class="owner-actions">
+                    <button class="icon-btn" (click)="openAddFacility(owner.id)" title="Aggiungi Facility">
+                      🏠+
+                    </button>
+                    <button class="icon-btn" (click)="openEditOwner(owner)" title="Modifica">
+                      ✏️
+                    </button>
+                    <button class="icon-btn danger" (click)="removeOwner(owner)" title="Rimuovi">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- FACILITIES TAB -->
+      @if (activeTab() === 'facilities') {
+        <div class="facilities-section">
+          <div class="section-header">
+            <h3>🏠 Tutte le Facility</h3>
+            <div class="search-box">
+              <input 
+                type="text" 
+                placeholder="🔍 Cerca facility..."
+                [(ngModel)]="searchTerm"
+              />
+            </div>
+          </div>
+
+          @if (filteredFacilities().length === 0) {
+            <div class="empty-state">
+              @if (bastion()!.facilities.length === 0) {
+                <p>🏗️ Nessuna facility</p>
+                <p class="empty-hint">Seleziona un personaggio e aggiungi facility</p>
+              } @else {
+                <p>🔍 Nessun risultato</p>
+                <p class="empty-hint">Nessuna facility corrisponde alla ricerca</p>
+              }
+            </div>
+          } @else {
+            <div class="facilities-grid">
+              @for (facility of filteredFacilities(); track facility.id) {
+                <div class="facility-card" (click)="openFacilityDetail(facility)">
+                  <div class="facility-header" [style.border-left-color]="getOwnerById(facility.ownerId)?.color">
+                    <span class="facility-icon-large">{{ getFacilityDef(facility.type)?.icon }}</span>
+                    <div class="facility-info">
+                      <h4>{{ facility.customName || getFacilityDef(facility.type)?.nameIt }}</h4>
+                      <span class="facility-owner">
+                        di {{ getOwnerById(facility.ownerId)?.name || 'Sconosciuto' }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="facility-meta">
+                    <span class="facility-size">{{ facility.size }}</span>
+                    <span class="facility-level" [style.background-color]="getCRColor(getFacilityDef(facility.type)?.minLevel || 5)">
+                      Lv.{{ getFacilityDef(facility.type)?.minLevel }}+
+                    </span>
+                  </div>
+
+                  <div class="facility-orders">
+                    @for (order of getFacilityDef(facility.type)?.orders || []; track order) {
+                      <span class="order-badge">
+                        {{ orderIcons[order] }} {{ orderNamesIt[order] }}
+                      </span>
+                    }
+                  </div>
+
+                  <div class="facility-hirelings">
+                    🧑‍🤝‍🧑 {{ getHirelingsForFacility(facility.id).length }} hirelings
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- HIRELINGS TAB -->
+      @if (activeTab() === 'hirelings') {
+        <div class="hirelings-section">
+          <h3>🧑‍🤝‍🧑 Tutti gli Hirelings</h3>
+
+          @if (bastion()!.hirelings.length === 0) {
+            <div class="empty-state">
+              <p>👷 Nessun hireling</p>
+              <p class="empty-hint">Aggiungi hirelings alle facility</p>
+            </div>
+          } @else {
+            <div class="hirelings-list">
+              @for (hireling of bastion()!.hirelings; track hireling.id) {
+                <div class="hireling-row">
+                  <div class="hireling-avatar">👤</div>
+                  <div class="hireling-info">
+                    <span class="hireling-name">{{ hireling.name }}</span>
+                    <span class="hireling-role">{{ hireling.role }}</span>
+                  </div>
+                  <div class="hireling-facility">
+                    @if (getFacilityDefForHireling(hireling); as def) {
+                      {{ def.icon }} {{ def.nameIt }}
+                    }
+                  </div>
+                  <button class="icon-btn danger small" (click)="removeHireling(hireling)">
+                    🗑️
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- EVENTS TAB -->
+      @if (activeTab() === 'events') {
+        <div class="events-section">
+          <div class="section-header">
+            <h3>🎲 Eventi del Bastion</h3>
+            <button class="action-btn primary" (click)="rollRandomEvent()">
+              🎲 Tira Nuovo Evento
+            </button>
+          </div>
+
+          @if (bastion()!.events.length === 0) {
+            <div class="empty-state">
+              <p>📜 Nessun evento</p>
+              <p class="empty-hint">Tira un evento casuale per iniziare!</p>
+            </div>
+          } @else {
+            <div class="events-list">
+              @for (event of bastion()!.events; track event.id) {
+                <div class="event-card" [class.resolved]="event.resolved" (click)="openEventDetail(event)">
+                  <div class="event-header">
+                    <span class="event-type-icon large">{{ getEventTypeIcon(event.type) }}</span>
+                    <div class="event-info">
+                      <h4>{{ event.title }}</h4>
+                      <span class="event-turn">Turno {{ event.turn }}</span>
+                    </div>
+                    <div class="event-status">
+                      @if (event.resolved) {
+                        <span class="status-badge resolved">✅ Risolto</span>
+                      } @else {
+                        <span class="status-badge pending">⏳ In sospeso</span>
+                      }
+                    </div>
+                  </div>
+                  <p class="event-description">{{ event.description }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- TREASURY TAB -->
+      @if (activeTab() === 'treasury') {
+        <div class="treasury-section">
+          <div class="section-header">
+            <h3>💰 Tesoreria del Bastion</h3>
+            <div class="treasury-balance">
+              <span class="balance-label">Saldo:</span>
+              <span class="balance-value">{{ bastion()!.gold | number }} GP</span>
+            </div>
+          </div>
+
+          <div class="treasury-actions">
+            <button class="action-btn income" (click)="openAddGold(true)">
+              ➕ Registra Entrata
+            </button>
+            <button class="action-btn expense" (click)="openAddGold(false)">
+              ➖ Registra Spesa
+            </button>
+          </div>
+
+          @if (recentTransactions().length === 0) {
+            <div class="empty-state">
+              <p>📒 Nessuna transazione</p>
+              <p class="empty-hint">Le transazioni appariranno qui</p>
+            </div>
+          } @else {
+            <h4 class="subsection-title">📒 Ultime Transazioni</h4>
+            <div class="transactions-list">
+              @for (tx of recentTransactions(); track tx.id) {
+                <div class="transaction-row" [class.income]="tx.amount > 0" [class.expense]="tx.amount < 0">
+                  <div class="tx-icon">
+                    @if (tx.amount > 0) { 📥 } @else { 📤 }
+                  </div>
+                  <div class="tx-info">
+                    <span class="tx-reason">{{ tx.reason }}</span>
+                    <span class="tx-date">Turno {{ tx.bastionTurn }}</span>
+                  </div>
+                  <div class="tx-amount">
+                    @if (tx.amount > 0) { + }{{ tx.amount | number }} GP
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- TROPHIES TAB -->
+      @if (activeTab() === 'trophies') {
+        <div class="trophies-section">
+          <div class="section-header">
+            <h3>🏆 Sala dei Trofei</h3>
+            <button class="action-btn primary" (click)="openAddTrophy()">
+              ➕ Aggiungi Trofeo
+            </button>
+          </div>
+
+          @if (bastion()!.trophies && bastion()!.trophies.length > 0) {
+            <div class="trophy-value-total">
+              💎 Valore Totale Stimato: <strong>{{ getTotalTrophyValue() | number }} GP</strong>
+            </div>
+          }
+
+          @if (!bastion()!.trophies || bastion()!.trophies.length === 0) {
+            <div class="empty-state">
+              <p>🏆 Nessun trofeo</p>
+              <p class="empty-hint">Aggiungi i trofei conquistati durante le avventure!</p>
+            </div>
+          } @else {
+            <div class="trophies-grid">
+              @for (trophy of bastion()!.trophies; track trophy.id) {
+                <div class="trophy-card">
+                  <div class="trophy-icon">🏆</div>
+                  <div class="trophy-content">
+                    <h4>{{ trophy.name }}</h4>
+                    @if (trophy.description) {
+                      <p class="trophy-desc">{{ trophy.description }}</p>
+                    }
+                    @if (trophy.acquiredFrom) {
+                      <span class="trophy-source">📍 {{ trophy.acquiredFrom }}</span>
+                    }
+                    @if (trophy.estimatedValue) {
+                      <span class="trophy-value">💰 {{ trophy.estimatedValue | number }} GP</span>
+                    }
+                  </div>
+                  <button class="icon-btn danger small" (click)="removeTrophy(trophy)">
+                    🗑️
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- STATS TAB -->
+      @if (activeTab() === 'stats') {
+        <div class="stats-section">
+          <h3>📊 Dashboard Statistiche</h3>
+          
+          @if (bastionStats(); as stats) {
+            <!-- Overview Stats -->
+            <div class="stats-category">
+              <h4>🏰 Panoramica Bastion</h4>
+              <div class="stats-grid">
+                <div class="stat-box">
+                  <span class="stat-label">Turno Corrente</span>
+                  <span class="stat-value large">{{ stats.currentTurn }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Personaggi</span>
+                  <span class="stat-value">{{ stats.totalOwners }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Livello Medio</span>
+                  <span class="stat-value">{{ stats.averageLevel | number:'1.1-1' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Facilities Stats -->
+            <div class="stats-category">
+              <h4>🏠 Facility</h4>
+              <div class="stats-grid">
+                <div class="stat-box">
+                  <span class="stat-label">Totale Facility</span>
+                  <span class="stat-value">{{ stats.totalFacilities }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Cramped</span>
+                  <span class="stat-value">{{ stats.crampedFacilities }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Roomy</span>
+                  <span class="stat-value">{{ stats.roomyFacilities }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Vast</span>
+                  <span class="stat-value">{{ stats.vastFacilities }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">In Costruzione</span>
+                  <span class="stat-value warning">{{ stats.facilitiesInProgress }}</span>
+                </div>
+              </div>
+              
+              <!-- Slot Progress -->
+              <div class="slot-usage">
+                <div class="slot-header">
+                  <span>Utilizzo Slot</span>
+                  <span>{{ stats.usedSlots }} / {{ stats.totalSlots }}</span>
+                </div>
+                <div class="slot-bar">
+                  <div class="slot-fill" [style.width.%]="stats.slotPercentage"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Economy Stats -->
+            <div class="stats-category">
+              <h4>💰 Economia</h4>
+              <div class="stats-grid">
+                <div class="stat-box gold">
+                  <span class="stat-label">Oro Attuale</span>
+                  <span class="stat-value large">{{ stats.currentGold | number }} GP</span>
+                </div>
+                <div class="stat-box earned">
+                  <span class="stat-label">Totale Guadagnato</span>
+                  <span class="stat-value">+{{ stats.totalEarned | number }} GP</span>
+                </div>
+                <div class="stat-box spent">
+                  <span class="stat-label">Totale Speso</span>
+                  <span class="stat-value">-{{ stats.totalSpent | number }} GP</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Valore Trofei</span>
+                  <span class="stat-value">{{ stats.trophyValue | number }} GP</span>
+                </div>
+              </div>
+
+              @if (stats.hirelingCostPerTurn > 0) {
+                <div class="cost-alert">
+                  ⚠️ Costo Hirelings: <strong>{{ stats.hirelingCostPerTurn | number }} GP/turno</strong>
+                </div>
+              }
+            </div>
+
+            <!-- Activity Stats -->
+            <div class="stats-category">
+              <h4>📈 Attività</h4>
+              <div class="stats-grid">
+                <div class="stat-box">
+                  <span class="stat-label">Hirelings</span>
+                  <span class="stat-value">{{ stats.totalHirelings }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Ordini Attivi</span>
+                  <span class="stat-value">{{ stats.activeOrders }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Ordini Completati</span>
+                  <span class="stat-value">{{ stats.completedOrders }}</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Eventi Totali</span>
+                  <span class="stat-value">{{ stats.totalEvents }}</span>
+                </div>
+                @if (stats.unresolvedEvents > 0) {
+                  <div class="stat-box warning-box">
+                    <span class="stat-label">Eventi Non Risolti</span>
+                    <span class="stat-value">{{ stats.unresolvedEvents }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- CALENDAR TAB -->
+      @if (activeTab() === 'calendar') {
+        <div class="calendar-section">
+          <h3>📅 Calendario Turni Bastion</h3>
+          
+          <div class="current-turn-display">
+            <div class="turn-circle">
+              <span class="turn-number">{{ bastion()!.currentTurn }}</span>
+              <span class="turn-label">Turno Attuale</span>
+            </div>
+            <button class="action-btn primary large" (click)="advanceTurn()">
+              ⏭️ Avanza al Turno {{ bastion()!.currentTurn + 1 }}
+            </button>
+          </div>
+
+          <!-- Timeline Recente -->
+          <div class="timeline-section">
+            <h4>📜 Cronologia Recente</h4>
+            
+            @if (getTimelineEntries().length === 0) {
+              <div class="empty-state">
+                <p>📅 Nessuna attività registrata</p>
+                <p class="empty-hint">Gli eventi e ordini appariranno qui</p>
+              </div>
+            } @else {
+              <div class="timeline">
+                @for (entry of getTimelineEntries(); track entry.id) {
+                  <div class="timeline-entry" [class]="'type-' + entry.type">
+                    <div class="timeline-marker">
+                      <span class="entry-icon">{{ entry.icon }}</span>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="entry-header">
+                        <span class="entry-title">{{ entry.title }}</span>
+                        <span class="entry-turn">Turno {{ entry.turn }}</span>
+                      </div>
+                      @if (entry.description) {
+                        <p class="entry-desc">{{ entry.description }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Prossimi Eventi Previsti -->
+          @if (activeOrders().length > 0) {
+            <div class="upcoming-section">
+              <h4>⏳ Ordini in Corso</h4>
+              <div class="upcoming-list">
+                @for (order of activeOrders(); track order.order.id) {
+                  <div class="upcoming-item">
+                    <span class="upcoming-icon">🔨</span>
+                    <div class="upcoming-content">
+                      <span class="upcoming-title">{{ order.facility.customName || getFacilityDef(order.facility.type)?.name }}</span>
+                      <span class="upcoming-desc">{{ order.order.description }}</span>
+                    </div>
+                    <span class="upcoming-turn">
+                      @if (order.turnsRemaining <= 0) {
+                        ✅ Pronto!
+                      } @else {
+                        {{ order.turnsRemaining }} turni
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- DEFENDERS TAB -->
+      @if (activeTab() === 'defenders') {
+        <div class="defenders-section">
+          <div class="section-header">
+            <h3>⚔️ Difensori del Bastion</h3>
+            <div class="header-actions">
+              <button class="action-btn danger" (click)="rollDefenderCasualties()" [disabled]="defenderCount() === 0">
+                🎲 Simula Attacco
+              </button>
+              <button class="action-btn primary" (click)="openModal('add-defender')">
+                ➕ Aggiungi Manualmente
+              </button>
+            </div>
+          </div>
+
+          <!-- BARRACKS RECRUITMENT SECTION -->
+          <div class="recruitment-section">
+            <div class="recruitment-header">
+              <span class="recruitment-icon">🏛️</span>
+              <div class="recruitment-info">
+                <h4>Reclutamento dalla Caserma</h4>
+                <p>Usa l'ordine "Recluta" della Caserma per ottenere 1d4 difensori temporanei</p>
+              </div>
+            </div>
+            
+            <div class="recruitment-actions">
+              @if (!hasBarracks()) {
+                <div class="recruitment-warning">
+                  <span>⚠️</span>
+                  <span>Costruisci prima una <strong>Caserma</strong> nel tab Strutture!</span>
+                </div>
+              } @else {
+                <div class="recruitment-status">
+                  @if (getRecruitOrdersInProgress() > 0) {
+                    <div class="status-badge in-progress">
+                      ⏳ {{ getRecruitOrdersInProgress() }} ordini di reclutamento in corso
+                    </div>
+                  }
+                  @if (getPendingRecruitCount() > 0) {
+                    <div class="status-badge ready">
+                      ✅ {{ getPendingRecruitCount() }} ordini pronti da completare!
+                    </div>
+                  }
+                </div>
+                
+                <div class="recruitment-buttons">
+                  <button 
+                    class="action-btn primary" 
+                    (click)="startRecruitment()"
+                    [disabled]="!hasAvailableBarracks()">
+                    🛡️ Avvia Reclutamento
+                  </button>
+                  
+                  @if (getPendingRecruitCount() > 0) {
+                    <button class="action-btn success" (click)="completeRecruitment()">
+                      ✅ Completa Reclutamento (1d4 difensori)
+                    </button>
+                  }
+                </div>
+                
+                @if (!hasAvailableBarracks() && getRecruitOrdersInProgress() > 0) {
+                  <p class="recruitment-hint">Tutte le Caserme sono occupate. Avanza al turno successivo per completare.</p>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Defender Stats Summary -->
+          <div class="defender-summary-cards">
+            <div class="summary-card">
+              <span class="summary-icon">⚔️</span>
+              <div class="summary-content">
+                <span class="summary-value">{{ defenderCount() }}</span>
+                <span class="summary-label">Difensori Totali</span>
+              </div>
+            </div>
+            <div class="summary-card">
+              <span class="summary-icon">🏛️</span>
+              <div class="summary-content">
+                <span class="summary-value">{{ getDefendersBySource('barracks') }}</span>
+                <span class="summary-label">Dalla Caserma</span>
+              </div>
+            </div>
+            <div class="summary-card">
+              <span class="summary-icon">💰</span>
+              <div class="summary-content">
+                <span class="summary-value">{{ getDefendersBySource('hired') }}</span>
+                <span class="summary-label">Assoldati</span>
+              </div>
+            </div>
+            <div class="summary-card warning">
+              <span class="summary-icon">⚠️</span>
+              <div class="summary-content">
+                <span class="summary-value">{{ getTemporaryDefendersCount() }}</span>
+                <span class="summary-label">Temporanei</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- DMG 2024 Rules Info -->
+          <div class="rules-info-box">
+            <h4>📖 Regole Attacco (DMG 2024)</h4>
+            <ul>
+              <li>Quando si verifica un evento <strong>Attacco</strong>, tira <strong>6d6</strong></li>
+              <li>Per ogni <strong>1</strong> ottenuto, un difensore muore</li>
+              <li>Se non ci sono difensori, una Struttura Speciale viene disabilitata per 1 turno</li>
+            </ul>
+          </div>
+
+          <!-- Defenders List -->
+          @if (bastion()!.defenders.length === 0) {
+            <div class="empty-state">
+              <span class="empty-icon">👥</span>
+              <p>Nessun difensore arruolato</p>
+              <p class="empty-hint">Aggiungi difensori dalla Caserma o assoldali</p>
+              <button class="action-btn primary" (click)="openModal('add-defender')">
+                ➕ Arruola Difensore
+              </button>
+            </div>
+          } @else {
+            <div class="defenders-grid">
+              @for (defender of bastion()!.defenders; track defender.id) {
+                <div class="defender-card" [class.temporary]="defender.type === 'mercenary'">
+                  <div class="defender-header">
+                    <span class="defender-icon">{{ getDefenderSourceIcon(defender.source || 'other') }}</span>
+                    <h4 class="defender-name">{{ defender.name }}</h4>
+                    @if (defender.type === 'mercenary') {
+                      <span class="temporary-badge">Temporaneo</span>
+                    }
+                  </div>
+                  <div class="defender-details">
+                    <div class="detail-row">
+                      <span class="detail-label">Provenienza:</span>
+                      <span class="detail-value">{{ getDefenderSourceLabel(defender.source || 'other') }}</span>
+                    </div>
+                    @if (defender.monthlyCost) {
+                      <div class="detail-row">
+                        <span class="detail-label">Costo Mensile:</span>
+                        <span class="detail-value gold">{{ defender.monthlyCost }} GP</span>
+                      </div>
+                    }
+                    <div class="detail-row">
+                      <span class="detail-label">Arruolato:</span>
+                      <span class="detail-value">{{ defender.hiredDate | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    @if (defender.notes) {
+                      <div class="detail-row notes">
+                        <span class="detail-label">Note:</span>
+                        <span class="detail-value">{{ defender.notes }}</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="defender-actions">
+                    <button class="action-btn danger small" (click)="removeDefender(defender.id)">
+                      ❌ Rimuovi
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- MODALS -->
+
+<!-- Add Owner Modal -->
+@if (modalType() === 'add-owner') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>➕ Aggiungi Personaggio</h3>
+      
+      <div class="form-group">
+        <label>Nome</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newOwnerName"
+          placeholder="Nome del personaggio" />
+      </div>
+
+      <div class="form-group">
+        <label>Livello (5-20)</label>
+        <input 
+          type="number" 
+          [(ngModel)]="newOwnerLevel"
+          min="5" 
+          max="20" />
+        <span class="form-hint">
+          Lv.{{ newOwnerLevel }}: max {{ newOwnerLevel >= 17 ? 8 : newOwnerLevel >= 13 ? 7 : newOwnerLevel >= 9 ? 6 : 4 }} facility
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Classe (opzionale)</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newOwnerClass"
+          placeholder="Es: Warlock, Fighter..." />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Annulla</button>
+        <button class="btn primary" (click)="addOwner()">Aggiungi</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Owner Modal -->
+@if (modalType() === 'edit-owner' && editingOwnerData) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>✏️ Modifica Personaggio</h3>
+      
+      <div class="form-group">
+        <label>Nome</label>
+        <input 
+          type="text" 
+          [(ngModel)]="editingOwnerData.name" />
+      </div>
+
+      <div class="form-group">
+        <label>Livello</label>
+        <input 
+          type="number" 
+          [(ngModel)]="editingOwnerData.level"
+          min="5" 
+          max="20" />
+      </div>
+
+      <div class="form-group">
+        <label>Classe</label>
+        <input 
+          type="text" 
+          [(ngModel)]="editingOwnerData.class" />
+      </div>
+
+      <div class="form-group">
+        <label>Icona</label>
+        <div class="icon-picker">
+          @for (icon of ownerIcons; track icon) {
+            <button 
+              type="button"
+              class="icon-option"
+              [class.selected]="editingOwnerData.icon === icon"
+              (click)="editingOwnerData.icon = icon">
+              {{ icon }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Annulla</button>
+        <button class="btn primary" (click)="saveOwnerEdit()">Salva</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add Facility Modal -->
+@if (modalType() === 'add-facility') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content large" (click)="$event.stopPropagation()">
+      <h3>🏠 Aggiungi Facility</h3>
+      
+      <div class="form-group">
+        <label>Nome personalizzato (opzionale)</label>
+        <input 
+          type="text" 
+          [(ngModel)]="facilityCustomName"
+          placeholder="Es: La Forgia di Thorin..." />
+      </div>
+
+      <div class="facility-type-grid">
+        @for (def of availableFacilityTypes(); track def.type) {
+          <div 
+            class="facility-type-card"
+            [class.selected]="selectedFacilityType === def.type"
+            (click)="selectedFacilityType = def.type; selectedGuildType = ''">
+            <span class="type-icon">{{ def.icon }}</span>
+            <span class="type-name">{{ def.nameIt }}</span>
+            <span class="type-level" [style.background-color]="getCRColor(def.minLevel)">
+              Lv.{{ def.minLevel }}+
+            </span>
+            <p class="type-desc">{{ def.description }}</p>
+            <div class="type-orders">
+              @for (order of def.orders; track order) {
+                <span class="mini-order">{{ orderIcons[order] }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Selezione tipo gilda per Guildhall -->
+      @if (selectedFacilityType === 'guildhall') {
+        <div class="guild-selection">
+          <h4>🏛️ Scegli il tipo di Gilda</h4>
+          <p class="guild-hint">La gilda ha circa 50 membri. Ogni turno puoi dare l'ordine Recruit per assegnare un compito ai membri.</p>
+          <div class="guild-type-grid">
+            @for (guild of guildDefinitions; track guild.type) {
+              <div 
+                class="guild-type-card"
+                [class.selected]="selectedGuildType === guild.type"
+                (click)="selectedGuildType = guild.type">
+                <div class="guild-header">
+                  <span class="guild-symbol">{{ guild.symbol }}</span>
+                  <span class="guild-name">{{ guild.nameIt }}</span>
+                </div>
+                <p class="guild-desc">{{ guild.assignmentIt }}</p>
+                @if (guild.effectDurationIt) {
+                  <span class="guild-duration">⏳ {{ guild.effectDurationIt }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Annulla</button>
+        <button class="btn primary" 
+                [disabled]="!selectedFacilityType || (selectedFacilityType === 'guildhall' && !selectedGuildType)" 
+                (click)="addFacility()">
+          Aggiungi
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Facility Detail Modal -->
+@if (modalType() === 'facility-detail' && selectedFacility) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      @if (getFacilityDef(selectedFacility.type); as def) {
+        <div class="facility-detail-header">
+          <span class="detail-icon">{{ def.icon }}</span>
+          <div>
+            <h3>{{ selectedFacility.customName || def.nameIt }}</h3>
+            <span class="detail-owner">
+              Gestita da {{ getOwnerById(selectedFacility.ownerId)?.name }}
+            </span>
+          </div>
+        </div>
+
+        <p class="detail-description">{{ def.description }}</p>
+
+        <!-- Guild Type for Guildhall -->
+        @if (selectedFacility.type === 'guildhall' && selectedFacility.guildType) {
+          <div class="facility-guild-info">
+            <span class="guild-icon">🏛️</span>
+            <div class="guild-content">
+              <strong>{{ getGuildDef(selectedFacility.guildType)?.nameIt }}</strong>
+              <p>{{ getGuildDef(selectedFacility.guildType)?.assignmentIt }}</p>
+              @if (getGuildDef(selectedFacility.guildType)?.effectDurationIt) {
+                <span class="guild-effect">⏳ {{ getGuildDef(selectedFacility.guildType)?.effectDurationIt }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Prerequisite -->
+        @if (def.prerequisiteIt || def.prerequisite) {
+          <div class="facility-prerequisite">
+            <span class="prereq-icon">⚠️</span>
+            <div class="prereq-content">
+              <strong>Prerequisito:</strong>
+              <span>{{ def.prerequisiteIt || def.prerequisite }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Passive Benefit / Charm -->
+        @if (def.passiveBenefitIt || def.passiveBenefit) {
+          <div class="facility-passive-benefit">
+            <span class="benefit-icon">✨</span>
+            <div class="benefit-content">
+              <strong>Beneficio Passivo:</strong>
+              <span>{{ def.passiveBenefitIt || def.passiveBenefit }}</span>
+            </div>
+          </div>
+        }
+
+        <div class="detail-stats">
+          <div class="detail-stat">
+            <span class="stat-label">Dimensione</span>
+            <span class="stat-value">{{ selectedFacility.size }}</span>
+          </div>
+          <div class="detail-stat">
+            <span class="stat-label">Livello Richiesto</span>
+            <span class="stat-value">{{ def.minLevel }}+</span>
+          </div>
+          <div class="detail-stat">
+            <span class="stat-label">Costo Base</span>
+            <span class="stat-value">{{ def.baseCost }} GP</span>
+          </div>
+        </div>
+
+        <h4>🎯 Ordini Disponibili</h4>
+        <div class="detail-orders">
+          @for (order of def.orders; track order) {
+            <button class="order-badge large clickable" 
+                    [class.disabled]="selectedFacility.currentOrder"
+                    (click)="openCreateOrder(selectedFacility, order)">
+              {{ orderIcons[order] }} {{ orderNamesIt[order] }}
+            </button>
+          }
+        </div>
+        @if (selectedFacility.currentOrder) {
+          <div class="current-order-warning">
+            ⏳ Ordine in corso: {{ getOrderTypeName(selectedFacility.currentOrder.type) }}
+          </div>
+        }
+
+        <!-- Craft Options (se disponibili per la facility) -->
+        @if (def.craftOptions && def.craftOptions.length > 0) {
+          <h4>🔧 Opzioni Craft Disponibili</h4>
+          <div class="craft-options-list">
+            @for (opt of def.craftOptions; track opt.name) {
+              <div class="craft-option-card" 
+                   [class.disabled]="opt.levelRequired && getOwnerById(selectedFacility.ownerId)!.level < opt.levelRequired">
+                <div class="craft-option-header">
+                  <span class="craft-name">{{ opt.nameIt }}</span>
+                  @if (opt.levelRequired) {
+                    <span class="level-req">Lv.{{ opt.levelRequired }}+</span>
+                  }
+                </div>
+                <p class="craft-description">{{ opt.descriptionIt }}</p>
+                <div class="craft-details">
+                  @if (opt.daysRequired > 0) {
+                    <span class="craft-time">⏱️ {{ opt.daysRequired }} {{ opt.daysRequired === 1 ? 'turno' : 'turni' }}</span>
+                  }
+                  @if (opt.goldCost > 0) {
+                    <span class="craft-cost">💰 {{ opt.goldCost }} GP</span>
+                  } @else {
+                    <span class="craft-cost free">✨ Gratis</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <h4>🧑‍🤝‍🧑 Hirelings ({{ getHirelingsForFacility(selectedFacility.id).length }})</h4>
+        <div class="detail-hirelings">
+          @for (hireling of getHirelingsForFacility(selectedFacility.id); track hireling.id) {
+            <div class="hireling-chip">
+              <span>{{ hireling.name }}</span>
+              <span class="hireling-role-small">{{ hireling.role }}</span>
+            </div>
+          } @empty {
+            <p class="empty-hint">Nessun hireling assegnato</p>
+          }
+        </div>
+
+        <h4>📝 Note</h4>
+        <div class="facility-notes">
+          <textarea 
+            [(ngModel)]="selectedFacility.notes"
+            (blur)="saveFacilityNotes()"
+            placeholder="Aggiungi note per questa facility..."
+            rows="3"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn danger" (click)="removeFacility(selectedFacility)">
+            🗑️ Rimuovi
+          </button>
+          <button class="btn secondary" (click)="openAddHireling(selectedFacility.id)">
+            ➕ Hireling
+          </button>
+          <button class="btn primary" (click)="closeModal()">Chiudi</button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Add Hireling Modal -->
+@if (modalType() === 'add-hireling') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>➕ Aggiungi Hireling</h3>
+      
+      <div class="form-group">
+        <label>Nome</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newHirelingName"
+          placeholder="Nome dell'hireling" />
+      </div>
+
+      <div class="form-group">
+        <label>Ruolo</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newHirelingRole"
+          placeholder="Es: Fabbro, Bibliotecario, Guardia..." />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Annulla</button>
+        <button class="btn primary" (click)="addHireling()">Assumi</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add Gold Transaction Modal -->
+@if (modalType() === 'add-gold') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content gold-modal" (click)="$event.stopPropagation()">
+      <h3>{{ goldAmount >= 0 ? '➕ Registra Entrata' : '➖ Registra Spesa' }}</h3>
+      
+      <div class="form-group">
+        <label>Importo (GP)</label>
+        <input 
+          type="number" 
+          [(ngModel)]="goldAmount"
+          placeholder="Importo in GP" />
+        <span class="form-hint">
+          Usa valori negativi per le spese
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Motivo (opzionale)</label>
+        <input 
+          type="text" 
+          [(ngModel)]="goldReason"
+          placeholder="Es: Vendita bottino, Riparazioni..." />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Annulla</button>
+        <button class="btn primary" (click)="addGoldTransaction()">
+          {{ goldAmount >= 0 ? 'Registra Entrata' : 'Registra Spesa' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add Trophy Modal -->
+@if (modalType() === 'add-trophy') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content trophy-modal" (click)="$event.stopPropagation()">
+      <h3>🏆 Aggiungi Trofeo</h3>
+      
+      <div class="form-group">
+        <label>Nome del Trofeo *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="trophyName"
+          placeholder="Es: Testa di Drago, Spada del Re..." />
+      </div>
+
+      <div class="form-group">
+        <label>Descrizione</label>
+        <textarea 
+          [(ngModel)]="trophyDescription"
+          placeholder="Descrivi il trofeo..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Acquisito da</label>
+        <input 
+          type="text" 
+          [(ngModel)]="trophyAcquiredFrom"
+          placeholder="Es: Dungeon di Cragmaw, Battaglia finale..." />
+      </div>
+
+      <div class="form-group">
+        <label>Valore Stimato (GP)</label>
+        <input 
+          type="number" 
+          [(ngModel)]="trophyValue"
+          min="0"
+          placeholder="0" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Annulla</button>
+        <button class="btn primary" (click)="addTrophy()">Aggiungi Trofeo</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Event Detail Modal -->
+@if (modalType() === 'event-detail' && selectedEvent) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content event-modal" (click)="$event.stopPropagation()">
+      <div class="event-modal-header">
+        <span class="event-type-icon xlarge">{{ getEventTypeIcon(selectedEvent.type) }}</span>
+        <h3>{{ selectedEvent.title }}</h3>
+      </div>
+      
+      <div class="event-meta">
+        <span class="event-turn-badge">📅 Turno {{ selectedEvent.turn }}</span>
+        @if (selectedEvent.roll) {
+          <span class="event-roll-badge">🎲 d100: {{ selectedEvent.roll }}</span>
+        }
+        @if (selectedEvent.subRoll) {
+          <span class="event-roll-badge sub">🎲 Sub: {{ selectedEvent.subRoll }}</span>
+        }
+        @if (selectedEvent.resolved) {
+          <span class="status-badge resolved">✅ Risolto</span>
+        } @else {
+          <span class="status-badge pending">⏳ In sospeso</span>
+        }
+      </div>
+
+      <p class="event-description-full">{{ selectedEvent.description }}</p>
+
+      <!-- Risultato Sottotabella -->
+      @if (selectedEvent.subTableResult) {
+        <div class="event-subtable-result">
+          <h5>📋 Dettaglio</h5>
+          <p>{{ selectedEvent.subTableResult }}</p>
+        </div>
+      }
+
+      <!-- Meccaniche -->
+      @if (selectedEvent.mechanics) {
+        <div class="event-mechanics">
+          <h5>⚙️ Meccaniche</h5>
+          <p>{{ selectedEvent.mechanics }}</p>
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Chiudi</button>
+        @if (!selectedEvent.resolved) {
+          <button class="btn primary" (click)="resolveEvent(selectedEvent)">
+            ✅ Segna come Risolto
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add Defender Modal -->
+@if (modalType() === 'add-defender') {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>⚔️ Aggiungi Difensore</h3>
+      
+      <div class="form-group">
+        <label>Nome Difensore *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="defenderName"
+          placeholder="Es. Guardia Veterana, Arciere Elfo..."
+          class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Provenienza</label>
+        <select [(ngModel)]="defenderSource" class="form-control">
+          <option value="barracks">🏛️ Caserma</option>
+          <option value="guest">🎭 Ospite (evento casuale)</option>
+          <option value="hired">💰 Assoldato</option>
+          <option value="other">📜 Altro</option>
+        </select>
+      </div>
+
+      @if (defenderSource === 'hired') {
+        <div class="form-group">
+          <label>Costo Settimanale (GP)</label>
+          <input 
+            type="number" 
+            [(ngModel)]="defenderCost"
+            min="0"
+            class="form-control">
+        </div>
+      }
+
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="defenderIsTemporary">
+          <span>Difensore Temporaneo</span>
+        </label>
+        <p class="form-hint">I difensori temporanei (es. da eventi) possono andarsene</p>
+      </div>
+
+      <div class="form-group">
+        <label>Note</label>
+        <textarea 
+          [(ngModel)]="defenderNotes"
+          rows="2"
+          placeholder="Descrizione, equipaggiamento, storia..."
+          class="form-control"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModal()">Annulla</button>
+        <button class="btn primary" (click)="addDefender()" [disabled]="!defenderName.trim()">
+          ⚔️ Arruola
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Casualty Report Modal -->
+@if (modalType() === 'casualty-report' && lastCasualtyReport) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content casualty-modal" (click)="$event.stopPropagation()">
+      <div class="casualty-header" [class.has-deaths]="lastCasualtyReport.deaths > 0">
+        @if (lastCasualtyReport.deaths > 0) {
+          <span class="casualty-icon">💀</span>
+          <h3>Rapporto Perdite</h3>
+        } @else {
+          <span class="casualty-icon">✅</span>
+          <h3>Nessuna Perdita!</h3>
+        }
+      </div>
+
+      <div class="casualty-dice-display">
+        <h4>🎲 Risultato 6d6</h4>
+        <div class="dice-results">
+          @for (roll of lastCasualtyReport.rolls; track $index) {
+            <span class="dice-result" [class.death]="roll === 1">{{ roll }}</span>
+          }
+        </div>
+        <p class="dice-legend">I risultati di <strong>1</strong> = difensore caduto</p>
+      </div>
+
+      <div class="casualty-summary">
+        <div class="summary-row deaths">
+          <span class="label">💀 Caduti:</span>
+          <span class="value">{{ lastCasualtyReport.deaths }}</span>
+        </div>
+        <div class="summary-row survivors">
+          <span class="label">⚔️ Sopravvissuti:</span>
+          <span class="value">{{ lastCasualtyReport.survivors }}</span>
+        </div>
+      </div>
+
+      @if (lastCasualtyReport.deaths > 0) {
+        <div class="casualty-warning">
+          <p>⚠️ I difensori caduti sono stati rimossi dalla guarnigione.</p>
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn primary" (click)="closeModal()">Chiudi</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Create Order Modal -->
+@if (modalType() === 'create-order' && orderFacility && selectedOrderType) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content order-modal" (click)="$event.stopPropagation()">
+      @if (getFacilityDef(orderFacility.type); as def) {
+        <div class="order-modal-header">
+          <span class="order-type-icon">{{ orderIcons[selectedOrderType] }}</span>
+          <div>
+            <h3>Ordine: {{ orderNamesIt[selectedOrderType] }}</h3>
+            <span class="facility-name">{{ orderFacility.customName || def.nameIt }}</span>
+          </div>
+        </div>
+
+        <!-- Per tutti gli ordini: mostra opzioni specifiche se disponibili -->
+        @if (getOrderOptions(def).length > 0) {
+          <div class="craft-selection">
+            <h4>Seleziona opzione:</h4>
+            <div class="craft-options-grid">
+              @for (opt of getOrderOptions(def); track opt.name) {
+                @if (!$any(opt).levelRequired || getOwnerById(orderFacility.ownerId)!.level >= $any(opt).levelRequired) {
+                  <div class="craft-option-select" 
+                       [class.selected]="selectedOrderOption?.name === opt.name"
+                       (click)="selectOrderOption(opt)">
+                    <span class="opt-name">{{ opt.nameIt }}</span>
+                    <span class="opt-details">
+                      @if (opt.daysRequired > 0) {
+                        {{ opt.daysRequired }}T
+                      }
+                      @if (opt.goldCost > 0) {
+                        · {{ opt.goldCost }}GP
+                      } @else {
+                        · Gratis
+                      }
+                      @if ($any(opt).effectDurationIt) {
+                        <span class="effect-duration">⏳ {{ $any(opt).effectDurationIt }}</span>
+                      }
+                    </span>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Descrizione ordine -->
+        <div class="form-group">
+          <label>Descrizione (opzionale)</label>
+          <input type="text" 
+                 [(ngModel)]="orderDescription"
+                 placeholder="Dettagli sull'ordine..." />
+        </div>
+
+        <!-- Durata automatica -->
+        <div class="order-summary">
+          <div class="summary-item">
+            <span class="label">⏱️ Durata:</span>
+            <span class="value">{{ getOrderDuration() }} {{ getOrderDuration() === 1 ? 'turno' : 'turni' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">💰 Costo:</span>
+            <span class="value">{{ getOrderCost() }} GP</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn secondary" (click)="closeModal()">Annulla</button>
+          <button class="btn primary" 
+                  [disabled]="getOrderOptions(def).length > 0 && !selectedOrderOption"
+                  (click)="confirmCreateOrder()">
+            🚀 Avvia Ordine
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
